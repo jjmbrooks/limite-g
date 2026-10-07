@@ -6,6 +6,10 @@ Cada entrada escrita por Hark termina con "— firmado: Hark"; las de autores hu
 
 ## [Unreleased]
 
+### Changed
+- M11 interfaz 16-bit: ventanas con marco doble y degradado tipo SNES, botones biselados con estado presionado, HUD con placas, chips, pestañas y barras con brillo, fondo con degradado de cielo y transiciones suaves (se apagan con movimiento reducido) — firmado: Hark
+- M11 simuladores (sin aire, con aire, impacto): escena a pantalla completa sin scroll en 360×640 y 390×844 (js/ui/escena.js): fondo 16-bit con paralaje por franjas que se desplaza sin fin y nave con bamboleo; la altura se cambia arrastrando sobre la escena (o con flechas: role=slider) con regla lateral de escala automática y etiqueta de altura junto a la nave; SOLTAR grande superpuesto, Ajustes en hoja deslizable y resultados superpuestos tras el impacto (gráfica v(t) y zoom del frenado); con la regla saboteada no se muestra la altura y se escribe — firmado: Hark
+
 ### Added
 - Convención de firma de Hark: `scripts/hark-commit.sh`, `CONTRIBUTING.md` y este CHANGELOG. — firmado: Hark
 - Control de calidad: `scripts/qa.sh` (sintaxis, enlace de módulos, referencias HTML, limpieza, pruebas `node:test` de física y datos, humo HTTP), workflow `calidad.yml` (copia en `docs/workflows/`) y `docs/QA.md` — firmado: Hark
@@ -18,6 +22,9 @@ Cada entrada escrita por Hark termina con "— firmado: Hark"; las de autores hu
 - M8: Acto 3 de impacto: F_media·d = Ec con distancia de frenado (paquete + suelo + funda), suelos (concreto, pasto, arena, espuma) y fundas diseñables (material y grosor; su masa suma energía), simulador `#impacto` con zoom del frenado y medidor de fuerza, Europa e Ío, Códice y Examen de Comandante (13 preguntas), 4 misiones con historia y sabotaje de suelos (diseño para el peor caso) — firmado: Hark
 - M9: Final en Estación Entropía: intro, tres tramos con el Núcleo de Comunicación (sin aire con datos borrados, domo con tormenta y paracaídas, plataforma con suelo cambiante) y desenlace; logros guardados en localStorage (11 insignias) con aviso al desbloquear y vitrina `#logros` — firmado: Hark
 - M10: tarjeta de logros en PNG pixel art compartible (Web Share con archivo, o descarga + enlace de WhatsApp); PWA offline con manifest, íconos pixel, service worker con caché versionada y fuentes alojadas en el repo; QA del precache y prueba sin red; avisos de logros agrupados y guiones en chips — firmado: Hark
+- M11 arte 16-bit: retratos de Nova, Dr. Caos y GAL-1, nave, cápsula, 6 paquetes y 9 fondos panorámicos en PNG (assets/sprites, assets/fondos) generados con el mood board como referencia y reducidos a pixel art con paleta limitada (scripts/arte16.py); js/gfx/imagenes.js carga los PNG con la matriz como respaldo — firmado: Hark
+- M11 logros: la celebración de cada logro desbloqueado (destellos) ofrece «⇪ Compartir», que dibuja la tarjeta de js/ui/tarjeta.js y la comparte con Web Share o la descarga con enlace de WhatsApp (js/ui/compartir.js) — firmado: Hark
+- M11 videos: 3 imágenes iniciales 9:16 en estilo 16-bit (docs/videos/intro.png, entrega.png, final.png) con prompts de image-to-video en inglés y español (docs/videos/prompts.md); js/ui/video.js reproduce assets/video/*.mp4 (muted, playsinline, «Saltar») antes del prólogo, tras la primera entrega en Marte y antes del Final, y los omite sin error si no existen; PLAN.md (M11) y AGENTS.md actualizados — firmado: Hark
 
 ## [0.2.0] - 2026-10-07
 

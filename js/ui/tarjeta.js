@@ -3,6 +3,7 @@
 // y se comparte como PNG con Web Share API (files); si no se puede, se descarga y se ofrece un enlace de WhatsApp.
 import { sprite } from '../gfx/pixel.js';
 import { NOVA } from '../gfx/sprites.js';
+import { load } from '../gfx/imagenes.js';
 import { PALETTE as P } from '../gfx/palette.js';
 import { LOGROS } from '../data/logros.js';
 
@@ -67,9 +68,9 @@ export async function drawCard(s, nombre = '') {
   x.fillStyle = P.o; x.fillText('LÍMITE G', W / 2, 34);
   const sub = 'Red Postal Interplanetaria · Energía y caída libre';
   fit(x, sub, 22, VT, W - 6 * U); x.fillStyle = P.g; x.fillText(sub, W / 2, 76);
-  // Retrato de Nova (16×16 → 120 px).
+  // Retrato de Nova (PNG 16-bit 64×64 → 128 px; matriz 16×16 de respaldo).
   box(x, 36, 110, 132, 132, '#0e1430', P.t);
-  x.drawImage(sprite(NOVA), 42, 116, 120, 120);
+  x.drawImage((await load('retrato-nova')) || sprite(NOVA), 38, 112, 128, 128);
   // Rango, nombre y estrellas.
   x.textAlign = 'left';
   x.font = `12px ${PIX}`; x.fillStyle = P.g; x.fillText(cleanName(nombre) ? 'MENSAJERO(A):' : 'RANGO', 192, 118);

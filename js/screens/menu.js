@@ -1,8 +1,9 @@
 import { go } from '../nav.js';
 import { get } from '../state.js';
 import { currentAct } from '../progress.js';
-import { pxCanvas } from '../gfx/pixel.js';
-import { NOVA, CAOS, PARABOLA, CAPSULA } from '../gfx/sprites.js';
+import { artCanvas } from '../gfx/imagenes.js';
+import { portrait } from '../ui/speakers.js';
+import { PARABOLA, CAPSULA } from '../gfx/sprites.js';
 
 export default function menu(el) {
   const s = get(), act = Math.min(3, currentAct()); // el Final no tiene Códice ni Examen propios
@@ -25,8 +26,8 @@ export default function menu(el) {
       <div><h2 style="color:var(--magenta)">DR. CAOS</h2><p>"La entropía siempre gana: todo lo que cae, se destruye."</p></div>
     </div>`;
   el.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
-  el.querySelector('.slot-nova').replaceWith(pxCanvas(NOVA, { cls: 'avatar', label: 'Nova' }));
-  el.querySelector('.slot-caos').replaceWith(pxCanvas(CAOS, { cls: 'avatar caos', label: 'Dr. Caos' }));
-  el.querySelector('.hero-ship').replaceWith(pxCanvas(PARABOLA, { cls: 'px hero-ship', label: 'Nave Parábola' }));
-  el.querySelector('.hero-cap').replaceWith(pxCanvas(CAPSULA, { cls: 'px hero-cap', label: 'Cápsula de entrega' }));
+  el.querySelector('.slot-nova').replaceWith(portrait('nova'));
+  el.querySelector('.slot-caos').replaceWith(portrait('caos'));
+  el.querySelector('.hero-ship').replaceWith(artCanvas('nave', PARABOLA, { w: 72, h: 27, cls: 'px hero-ship', label: 'Nave Parábola' }));
+  el.querySelector('.hero-cap').replaceWith(artCanvas('capsula', CAPSULA, { w: 22, cls: 'px hero-cap', label: 'Cápsula de entrega' }));
 }

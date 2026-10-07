@@ -3,17 +3,37 @@
 // (funciona en / y bajo /limite-g/ de GitHub Pages) y responde primero desde la caché.
 // AL PUBLICAR CAMBIOS: sube VERSION (p. ej. 'm10-2') para que los teléfonos descarguen la versión nueva.
 // La lista PRECACHE la verifica scripts/qa.sh; `node scripts/qa/sw-precache.mjs --fix` la regenera.
-const VERSION = 'm10-1';
+const VERSION = 'm11-1';
 const CACHE = 'limiteg-' + VERSION;
 
 // <precache>
 const PRECACHE = [
   './',
+  'assets/fondos/entropia.png',
+  'assets/fondos/europa.png',
+  'assets/fondos/io.png',
+  'assets/fondos/jupiter.png',
+  'assets/fondos/luna.png',
+  'assets/fondos/marte.png',
+  'assets/fondos/tierra.png',
+  'assets/fondos/titan.png',
+  'assets/fondos/venus.png',
   'assets/fuentes/press-start-2p-latin.woff2',
   'assets/fuentes/vt323-latin.woff2',
   'assets/iconos/icon-192.png',
   'assets/iconos/icon-512.png',
   'assets/iconos/maskable-512.png',
+  'assets/sprites/capsula.png',
+  'assets/sprites/nave.png',
+  'assets/sprites/obj-cel.png',
+  'assets/sprites/obj-cristal.png',
+  'assets/sprites/obj-huevo.png',
+  'assets/sprites/obj-nucleo.png',
+  'assets/sprites/obj-robot.png',
+  'assets/sprites/obj-vacuna.png',
+  'assets/sprites/retrato-caos.png',
+  'assets/sprites/retrato-gal.png',
+  'assets/sprites/retrato-nova.png',
   'css/style.css',
   'js/audio.js',
   'js/data/actos.js',
@@ -31,6 +51,8 @@ const PRECACHE = [
   'js/data/preguntas.js',
   'js/data/preguntas2.js',
   'js/data/preguntas3.js',
+  'js/data/videos.js',
+  'js/gfx/imagenes.js',
   'js/gfx/palette.js',
   'js/gfx/pixel.js',
   'js/gfx/scenery.js',
@@ -52,11 +74,14 @@ const PRECACHE = [
   'js/ui/anims-aire.js',
   'js/ui/anims-impacto.js',
   'js/ui/anims.js',
+  'js/ui/compartir.js',
   'js/ui/dialogo.js',
+  'js/ui/escena.js',
   'js/ui/grafica.js',
   'js/ui/speakers.js',
   'js/ui/tarjeta.js',
   'js/ui/toast.js',
+  'js/ui/video.js',
   'manifest.webmanifest',
   'index.html',
 ];

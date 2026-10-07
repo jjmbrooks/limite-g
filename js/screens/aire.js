@@ -9,15 +9,15 @@ import { starsAir } from '../data/historia2.js';
 import { createFall, vTerminal, ec, fmt } from '../physics.js';
 import { sfx, fallStart, fallSpeed, fallStop } from '../audio.js';
 import { get, set, addScore } from '../state.js';
-import { draw as drawPx, pxCanvas, planetCanvas } from '../gfx/pixel.js';
-import { PARABOLA, OBJ_SPRITES, CRACK, GAL1, PARACAIDAS, PARACAIDAS_MEDIO } from '../gfx/sprites.js';
-import { background } from '../gfx/scenery.js';
+import { sprite, planetCanvas } from '../gfx/pixel.js';
+import { OBJ_SPRITES, CRACK, GAL1, PARACAIDAS, PARACAIDAS_MEDIO } from '../gfx/sprites.js';
 import { drawVt, GW, GH } from '../ui/grafica.js';
 import { missionById, isDone } from '../progress.js';
 import { playScene } from '../ui/dialogo.js';
 import { go } from '../nav.js';
+import { artCanvas, drawArt } from '../gfx/imagenes.js';
+import { createScene, gameShell, wireShell } from '../ui/escena.js';
 
-const W = 120, H = 160, GROUND = 146, TOP = 14;
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)');
 const FREE_PLANETS = PLANETS.filter((p) => p.act === 2 || p.id === 'luna'); // la Luna, para ver que sin aire el paracaídas no sirve
 const REAL_SECONDS = 4; // duración aproximada en pantalla del tramo que falta
@@ -32,43 +32,39 @@ export default function aire(el, arg) {
   let h0 = mission?.h0 || 100, chute = CHUTES[0], openAt = 0;
   let fall = null, running = false, raf = 0, last = 0, parts = [], broken = false, stopScene = null, pts = [], vPeak = 0, flash = 0;
 
-  el.innerHTML = `
-    <h1 style="font-size:15px">${mission ? 'MISIÓN: ' + mission.title.toUpperCase() : 'SIMULADOR · CON AIRE'}</h1>
-    ${mission ? '' : '<div class="tabs" role="tablist"><a href="#simulador" role="tab">Sin aire</a><a href="#aire" role="tab" aria-selected="true" class="on">Con aire</a>' + (isDone('m8') ? '<a href="#impacto" role="tab">Impacto</a>' : '<span class="tab-off">⊘ Impacto</span>') + '</div>'}
-    <div id="scene"></div>
-    ${mission ? `<div class="panel mission"><h2>OBJETIVO</h2><p>${mission.brief}</p>
-      <p class="muted">≤ <b style="color:var(--yellow)">${obj.limit} J</b> y ≤ <b style="color:var(--yellow)">${mission.tMax} s</b> · ★★★ en ≤ ${mission.t3} s · ★★ en ≤ ${mission.t2} s</p></div>`
-      : '<div class="say"><span class="slot-gal"></span><p>GAL-1: "Con aire la energía ya no se conserva en el paquete. Mira la barra del aire y la gráfica."</p></div>'}
-    <div class="stage"><canvas width="${W}" height="${H}" role="img" aria-label="Escenario de la caída con aire"></canvas></div>
-    <div class="bars bars3">
-      <span>Ep</span><div class="bar ep"><i id="b-ep"></i></div><span id="v-ep">0 J</span>
-      <span>Ec</span><div class="bar ec"><i id="b-ec"></i></div><span id="v-ec">0 J</span>
-      <span>Aire</span><div class="bar air"><i id="b-air"></i></div><span id="v-air">0 J</span>
-    </div>
-    <div class="readout">
-      <div>Altura<b id="r-h">0 m</b></div><div>Velocidad<b id="r-v">0 m/s</b></div>
-      <div>Tiempo<b id="r-t">0 s</b></div><div>V. terminal<b id="r-vt">–</b></div>
-    </div>
-    <div class="graph"><canvas width="${GW}" height="${GH}" role="img" aria-label="Gráfica de velocidad contra tiempo"></canvas>
-      <p class="legend"><span><i class="lg-air"></i>con aire</span><span><i class="lg-vac"></i>sin aire</span><span><i class="lg-vt"></i>v terminal</span><span><i class="lg-max"></i>v máx. segura</span></p></div>
-    <div id="verdict" class="verdict" aria-live="polite"></div>
-    <div id="after"></div>
-    <button class="btn" id="drop">▼ SOLTAR</button>
-    <div class="panel">
-      ${mission ? '' : '<h2>PAQUETE</h2><div class="row" id="objs"></div><h2 style="margin-top:12px">PLANETA</h2><div class="row" id="pls"></div>'}
-      ${mission ? `<p class="lbl"><span>Altura de vuelo</span><span>${h0} m (fija)</span></p>`
-        : `<label class="lbl" for="h"><span>Altura</span><span id="h-lbl"></span></label><input type="range" id="h" min="5" max="1000" step="5">`}
+  const tabs = '<div class="tabs" role="tablist"><a href="#simulador" role="tab">Sin aire</a><a href="#aire" role="tab" aria-selected="true" class="on">Con aire</a>' + (isDone('m8') ? '<a href="#impacto" role="tab">Impacto</a>' : '<span class="tab-off">⊘ Impacto</span>') + '</div>';
+  el.innerHTML = gameShell({
+    aria: 'Escenario de la caída con aire',
+    head: mission ? `<div class="g-title">MISIÓN: ${mission.title.toUpperCase()}</div>
+      <div class="g-obj">≤ <b>${obj.limit} J</b> y ≤ <b>${mission.tMax} s</b> · ★★★ ≤ ${mission.t3} s · h = ${h0} m · ⚙ objetivo</div>` : tabs,
+    top: `<div class="g-read">
+        <div>Altura<b id="r-h">0 m</b></div><div>Veloc.<b id="r-v">0 m/s</b></div>
+        <div>Tiempo<b id="r-t">0 s</b></div><div>V. term.<b id="r-vt">–</b></div></div>
+      <div class="bars mini bars3">
+        <span>Ep</span><div class="bar ep"><i id="b-ep"></i></div><span id="v-ep">0 J</span>
+        <span>Ec</span><div class="bar ec"><i id="b-ec"></i></div><span id="v-ec">0 J</span>
+        <span>Aire</span><div class="bar air"><i id="b-air"></i></div><span id="v-air">0 J</span></div>`,
+    result: `<div class="graph"><canvas width="${GW}" height="${GH}" role="img" aria-label="Gráfica de velocidad contra tiempo"></canvas>
+      <p class="legend"><span><i class="lg-air"></i>con aire</span><span><i class="lg-vac"></i>sin aire</span><span><i class="lg-vt"></i>v terminal</span><span><i class="lg-max"></i>v máx. segura</span></p></div>`,
+    sheet: `${mission ? `<div class="panel mission"><h2>OBJETIVO</h2><p>${mission.brief}</p>
+        <p class="muted">≤ <b style="color:var(--yellow)">${obj.limit} J</b> y ≤ <b style="color:var(--yellow)">${mission.tMax} s</b> · ★★★ en ≤ ${mission.t3} s · ★★ en ≤ ${mission.t2} s</p>
+        <p class="lbl"><span>Altura de vuelo</span><span>${h0} m (fija)</span></p></div>`
+        : '<div class="say"><span class="slot-gal"></span><p>GAL-1: "Con aire la energía ya no se conserva en el paquete. Mira la barra del aire y la gráfica."</p></div><h2>PAQUETE</h2><div class="row" id="objs"></div><h2 style="margin-top:12px">PLANETA</h2><div class="row" id="pls"></div>'}
       <h2 style="margin-top:12px">PARACAÍDAS</h2><div class="row" id="chutes"></div>
       ${sab.has('tormenta') ? '<p class="lbl"><span>Apertura automática</span><span style="color:var(--magenta)">frita por la tormenta: usa ☂ ABRIR</span></p>'
         : '<label class="lbl" for="open"><span>Apertura automática</span><span id="open-lbl"></span></label><input type="range" id="open" min="0" step="1">'}
-    </div>
-    <div class="panel muted" id="hint"></div>`;
+      <div class="panel muted" id="hint"></div>`,
+  });
 
   const $ = (s) => el.querySelector(s);
-  const cv = $('.stage canvas'), g = cv.getContext('2d');
+  const ui = wireShell(el);
   const gcv = $('.graph canvas'), gg = gcv.getContext('2d');
-  g.imageSmoothingEnabled = false; gg.imageSmoothingEnabled = false;
-  $('.slot-gal')?.replaceWith(pxCanvas(GAL1, { cls: 'avatar sm gal', label: 'GAL-1' }));
+  gg.imageSmoothingEnabled = false;
+  $('.slot-gal')?.replaceWith(artCanvas('retrato-gal', GAL1, { w: 64, cls: 'avatar sm gal', label: 'GAL-1' }));
+  const sc = createScene($('.stage'), {
+    planet: pl, h0, hMin: 5, hMax: 1000, fixed: !!mission,
+    onHeight: (v) => { if (running) return; h0 = v; reset(); }, paint: drawStage,
+  });
 
   const rho = () => pl.air || 0;
   const vtOf = (extra = 0) => vTerminal(obj.m, pl.g, rho(), obj.Cd * obj.A + extra);
@@ -85,9 +81,8 @@ export default function aire(el, arg) {
   }
   function refreshUI() {
     if (!mission) {
-      chips($('#objs'), OBJECTS, obj, (o) => { obj = o; reset(); }, (o) => pxCanvas(OBJ_SPRITES[o.id], { cls: 'px chip-px' }));
-      chips($('#pls'), FREE_PLANETS, pl, (p) => { pl = p; reset(); }, (p) => planetCanvas(p, 16, 'px chip-px'));
-      $('#h').value = h0; $('#h-lbl').textContent = h0 + ' m';
+      chips($('#objs'), OBJECTS, obj, (o) => { obj = o; reset(); }, (o) => artCanvas('obj-' + o.id, OBJ_SPRITES[o.id], { cls: 'px chip-px' }));
+      chips($('#pls'), FREE_PLANETS, pl, (p) => { pl = p; sc.setPlanet(p); reset(); }, (p) => planetCanvas(p, 16, 'px chip-px'));
     }
     chips($('#chutes'), CHUTES, chute, (c) => { chute = c; reset(); });
     const op = $('#open');
@@ -102,7 +97,6 @@ export default function aire(el, arg) {
       vt sin paracaídas: <b>${showVt(vt0)}</b>${vt1 !== null ? ` · con ${chute.name.toLowerCase()} (Cd·A = ${fmt(cdA(chute), 2)} m²): <b>${showVt(vt1)}</b>` : ''}.
       Pista: vt = √(2mg / (ρ·Cd·A)).`;
   }
-  $('#h')?.addEventListener('input', (e) => { if (running) return; h0 = +e.target.value; reset(); });
   $('#open')?.addEventListener('input', (e) => { if (running) return; openAt = +e.target.value; refreshUI(); });
 
   function newFall() {
@@ -112,7 +106,8 @@ export default function aire(el, arg) {
   function reset() {
     cancelAnimationFrame(raf); fallStop(); running = false; broken = false; parts = []; pts = [[0, 0]]; vPeak = 0;
     fall = newFall();
-    $('#verdict').textContent = ''; $('#verdict').className = 'verdict'; $('#after').innerHTML = '';
+    $('#verdict').textContent = ''; $('#verdict').className = 'verdict'; $('#after').innerHTML = ''; ui.result(false);
+    sc.lock(false); sc.halt(false);
     $('#drop').textContent = '▼ SOLTAR'; $('#drop').classList.remove('teal');
     refreshUI(); show();
   }
@@ -124,7 +119,7 @@ export default function aire(el, arg) {
     $('#v-ep').textContent = fmt(ep, 1) + ' J'; $('#v-ec').textContent = fmt(k, 1) + ' J'; $('#v-air').textContent = fmt(Math.max(0, s.lost), 1) + ' J';
     $('#r-h').textContent = fmt(s.h, 1) + ' m'; $('#r-v').textContent = fmt(s.v, 2) + ' m/s';
     $('#r-t').textContent = fmt(s.t, 1) + ' s'; $('#r-vt').textContent = showVt(fall.vt());
-    drawStage(s); drawGraph(s);
+    drawGraph(s);
   }
 
   function drawGraph(s) {
@@ -136,28 +131,26 @@ export default function aire(el, arg) {
     });
   }
 
-  function drawStage(s) {
-    g.drawImage(background(pl, W, H, GROUND), 0, 0);
-    const yOf = (h) => GROUND - (h / h0) * (GROUND - TOP);
-    g.fillStyle = '#ffffff88';
-    for (let k = 0; k <= 5; k++) { const y = Math.round(yOf((h0 * k) / 5)); g.fillRect(2, y, k % 5 ? 3 : 6, 1); }
-    if (openAt > 0 && chute.A && !sab.has('tormenta')) { g.fillStyle = '#ff3fa4'; const y = Math.round(yOf(openAt)); for (let x = 2; x < W - 2; x += 4) g.fillRect(x, y, 2, 1); }
-    const bob = REDUCE.matches ? 0 : Math.round(Math.sin(performance.now() / 400));
-    drawPx(g, PARABOLA, 48, 1 + bob);
-    const x = 56, y = Math.round(yOf(s.h)) - 4;
-    if (s.v > 2 && s.h > 0) { g.fillStyle = '#ffffff55'; for (let k = 1; k < Math.min(5, 1 + s.v / 8); k++) g.fillRect(x + 3, y - k * 4, 2, 2); }
-    if (s.chute >= 0 && !s.landed) drawPx(g, s.chute < OPEN_TIME ? PARACAIDAS_MEDIO : PARACAIDAS, x - 2, y - 8);
-    drawPx(g, OBJ_SPRITES[obj.id], x, y);
-    if (broken) { g.fillStyle = '#0a0d22'; CRACK.forEach(([a, b]) => g.fillRect(x + a, y + b, 1, 1)); }
-    if (sab.has('tormenta')) storm();
+  // Lo que va encima del fondo y la nave (lo llama la escena en cada cuadro).
+  function drawStage(g, S) {
+    if (!fall) return;
+    const s = fall.s, sh = S.ship(), P = 16, x = Math.round(sh.cx - P / 2), moving = running || s.t > 0;
+    if (openAt > 0 && chute.A && !sab.has('tormenta')) { g.fillStyle = '#ff3fa4'; const y = Math.round(S.yOf(openAt)); for (let xx = 12; xx < S.W - 2; xx += 6) g.fillRect(xx, y, 3, 1); }
+    const y = moving ? Math.round(S.yOf(s.h)) - P : sh.y - 3;
+    if (s.v > 2 && s.h > 0) { g.fillStyle = '#ffffff55'; for (let k = 1; k < Math.min(5, 1 + s.v / 8); k++) g.fillRect(sh.cx - 1, y - k * 6, 2, 3); }
+    if (s.chute >= 0 && !s.landed) drawPx2(g, s.chute < OPEN_TIME ? PARACAIDAS_MEDIO : PARACAIDAS, x - 4, y - 16);
+    drawArt(g, 'obj-' + obj.id, OBJ_SPRITES[obj.id], x, y, P, P);
+    if (broken) { g.fillStyle = '#0a0d22'; CRACK.forEach(([a, b]) => g.fillRect(x + a * 2, y + b * 2, 2, 2)); }
+    if (sab.has('tormenta')) storm(g, S);
     parts.forEach((p) => { g.fillStyle = p.c; g.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
   }
-  function storm() { // lluvia diagonal y relámpagos (sin destellos con movimiento reducido)
+  const drawPx2 = (g, rows, x, y) => g.drawImage(sprite(rows), Math.round(x), Math.round(y), rows[0].length * 2, rows.length * 2);
+  function storm(g, S) { // lluvia diagonal y relámpagos (sin destellos con movimiento reducido)
     const t = REDUCE.matches ? 0 : performance.now() / 60;
     g.fillStyle = '#9fc8ff66';
-    for (let i = 0; i < 40; i++) { const x = (i * 29 + t * 2) % W, y = (i * 47 + t * 5) % GROUND; g.fillRect(Math.round(x), Math.round(y), 1, 3); }
+    for (let i = 0; i < 70; i++) { const x = (i * 29 + t * 2) % S.W, y = (i * 47 + t * 5) % S.GROUND; g.fillRect(Math.round(x), Math.round(y), 1, 4); }
     if (!REDUCE.matches && running && Math.random() < 0.01) flash = 3;
-    if (flash > 0) { flash--; g.fillStyle = '#ffffff55'; g.fillRect(0, 0, W, GROUND); }
+    if (flash > 0) { flash--; g.fillStyle = '#ffffff55'; g.fillRect(0, 0, S.W, S.GROUND); }
   }
 
   function drop() {
@@ -165,7 +158,7 @@ export default function aire(el, arg) {
       if (chute.A && fall.s.chute < 0) { fall.deploy(); sfx.launch(); $('#drop').textContent = '☂ PARACAÍDAS ABIERTO'; }
       return;
     }
-    reset(); running = true; sfx.launch(); fallStart();
+    reset(); running = true; sc.lock(true); ui.sheet(false); sfx.launch(); fallStart();
     if (chute.A) { $('#drop').textContent = '☂ ABRIR PARACAÍDAS'; $('#drop').classList.add('teal'); }
     last = performance.now();
     let nextPt = 0;
@@ -189,18 +182,19 @@ export default function aire(el, arg) {
   }
   function anim() {
     const step = () => {
-      parts.forEach((p) => { p.x += p.vx; p.y += p.vy; p.vy += 0.15; }); parts = parts.filter((p) => p.y < GROUND + 6);
-      drawStage(fall.s); if (parts.length) raf = requestAnimationFrame(step); else running = false;
+      parts.forEach((p) => { p.x += p.vx; p.y += p.vy; p.vy += 0.15; }); parts = parts.filter((p) => p.y < sc.GROUND + 6);
+      if (parts.length) raf = requestAnimationFrame(step); else running = false;
     };
     raf = requestAnimationFrame(step);
   }
 
   function land() {
     const s = fall.s, E = ec(obj.m, s.v), ratio = E / obj.limit;
-    broken = ratio > 1; running = true;
+    broken = ratio > 1; running = true; sc.halt(true); ui.result(true);
     $('#drop').textContent = '▼ SOLTAR'; $('#drop').classList.remove('teal');
     const n = broken ? 26 : 8, col = broken ? obj.color : pl.ground;
-    for (let i = 0; i < n; i++) parts.push({ x: 60, y: GROUND, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * (broken ? 3 : 1.5), c: col });
+    const cx = sc.ship().cx;
+    for (let i = 0; i < n; i++) parts.push({ x: cx, y: sc.GROUND, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * (broken ? 3 : 1.5), c: col });
     const V0 = Math.sqrt(2 * pl.g * h0), E0 = fall.E0;
     const cmp = `<span class="cmp">Sin aire: ${fmt(V0, 1)} m/s y ${fmt(E0, 1)} J${E0 > obj.limit ? ' (se rompía)' : ''}. Con aire: ${fmt(s.v, 1)} m/s; el aire se llevó ${Math.round((100 * s.lost) / E0)} % de la energía.</span>`;
     if (mission) return missionResult(E, s.t, cmp);
@@ -235,14 +229,14 @@ export default function aire(el, arg) {
       $('[data-map]').onclick = () => go('historia');
       $('[data-retry]')?.addEventListener('click', () => reset());
     };
-    if (!prev && mission.post?.length) setTimeout(() => { stopScene = playScene($('#scene'), mission.post, after); $('#scene').scrollIntoView({ block: 'nearest' }); }, 700);
+    if (!prev && mission.post?.length) setTimeout(() => { stopScene = playScene($('#scene'), mission.post, after); }, 700);
     else after();
   }
 
   $('#drop').onclick = drop;
   reset();
   if (mission?.pre?.length) stopScene = playScene($('#scene'), mission.pre);
-  return () => { cancelAnimationFrame(raf); fallStop(); stopScene && stopScene(); };
+  return () => { cancelAnimationFrame(raf); fallStop(); sc.destroy(); stopScene && stopScene(); };
 }
 
 function locked(el) {
@@ -250,7 +244,7 @@ function locked(el) {
     <div class="panel dialog"><span class="slot"></span><div><h2 style="color:var(--yellow)">GAL-1</h2>
     <p>"Mis sensores de atmósfera se calibran al completar el Acto 1. Termina la misión de Júpiter."</p></div></div>
     <button class="btn" data-map>▶ Ir al mapa de misiones</button><button class="btn ghost" data-sim>◎ Simulador sin aire</button>`;
-  el.querySelector('.slot').replaceWith(pxCanvas(GAL1, { cls: 'avatar sm gal', label: 'GAL-1' }));
+  el.querySelector('.slot').replaceWith(artCanvas('retrato-gal', GAL1, { w: 64, cls: 'avatar sm gal', label: 'GAL-1' }));
   el.querySelector('[data-map]').onclick = () => go('historia');
   el.querySelector('[data-sim]').onclick = () => go('simulador');
 }

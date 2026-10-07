@@ -12,6 +12,7 @@ import impacto from './screens/impacto.js';
 import logros from './screens/logros.js';
 import { newLogros, LOGROS } from './data/logros.js';
 import { toast } from './ui/toast.js';
+import { celebrarLogro } from './ui/compartir.js';
 import { sfx } from './audio.js';
 
 const ROUTES = { menu, historia, simulador, aire, impacto, codice, examen, logros };
@@ -25,11 +26,16 @@ function render() {
   app.innerHTML = '';
   const view = document.createElement('section'); view.className = 'fade-in'; app.appendChild(view);
   cleanup = (ROUTES[name] || menu)(view, arg) || null;
+  app.classList.toggle('full', !!view.querySelector('.game')); // simuladores a pantalla completa (M11)
   window.scrollTo(0, 0);
 }
 export { go };
 window.addEventListener('hashchange', render);
 
+// Alto real del HUD (con zona segura) para que la escena de juego llene el resto sin scroll.
+const hudEl = document.querySelector('.hud');
+const hudH = () => document.documentElement.style.setProperty('--hud-h', hudEl.offsetHeight + 'px');
+new ResizeObserver(hudH).observe(hudEl); hudH();
 const scoreEl = document.getElementById('hud-score');
 const paintScore = () => (scoreEl.textContent = '★ ' + get().score);
 document.addEventListener('state', paintScore);
@@ -40,8 +46,9 @@ document.addEventListener('state', () => {
   set({ logros: [...(get().logros || []), ...nuevos] });
   sfx.win();
   // Con más de dos a la vez (p. ej. una partida guardada antes de M9) se agrupan en un solo aviso para no tapar la pantalla.
-  if (nuevos.length > 2) { toast(`<b>¡${nuevos.length} logros desbloqueados!</b> Míralos en ★ Logros.`); return; }
-  nuevos.forEach((id) => { const l = LOGROS.find((x) => x.id === id); toast(`<b>¡Logro desbloqueado!</b> ${l.icon} ${l.title}`); });
+  // M11: cada celebración ofrece «Compartir» (tarjeta PNG con Web Share o WhatsApp).
+  if (nuevos.length > 2) { celebrarLogro(`<b>¡${nuevos.length} logros desbloqueados!</b> Míralos en ★ Logros.`); return; }
+  nuevos.forEach((id) => { const l = LOGROS.find((x) => x.id === id); celebrarLogro(`<b>¡Logro desbloqueado!</b> ${l.icon} ${l.title}`); });
 });
 paintScore();
 

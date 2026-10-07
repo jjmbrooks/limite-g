@@ -20,9 +20,10 @@ async function session(reducedMotion) {
   const page = await ctx.newPage();
   // Lo externo se bloquea: la prueba no depende de internet y solo cuenta errores del juego.
   await page.route('**/*', (r) => (r.request().url().startsWith(base) ? r.continue() : r.abort()));
+  // Las cinemáticas de assets/video/ son opcionales: su 404 (archivo aún no subido) no cuenta como error.
   page.on('console', (m) => {
     const src = m.location()?.url || '';
-    if (m.type() === 'error' && (src === '' || src.startsWith(base)) && !/net::ERR_FAILED/.test(m.text())) errors.push(`[${reducedMotion}] ${m.text()} ${src}`);
+    if (m.type() === 'error' && (src === '' || src.startsWith(base)) && !/net::ERR_FAILED/.test(m.text()) && !/assets\/video\//.test(src + m.text())) errors.push(`[${reducedMotion}] ${m.text()} ${src}`);
   });
   page.on('pageerror', (e) => errors.push(`[${reducedMotion}] ${e.message}`));
   const shot = async (name) => { if (shots) await page.screenshot({ path: path.join(shots, `${reducedMotion}-${name}.png`), fullPage: true }); };
@@ -32,6 +33,8 @@ async function session(reducedMotion) {
     if (act) await act(page);
     await shot(route.replace('/', '-'));
   };
+  // M11: paquete, paracaídas, funda… viven en la hoja de Ajustes de la escena: se abre, se elige y se cierra.
+  const ajustes = async (sel) => { await tapIf('[data-ajustes]'); await tapIf(sel); await tapIf('[data-cerrar]'); };
   const tapIf = async (sel, wait = 300) => { const el = page.locator(sel).first(); if (await el.count()) { await el.click(); await page.waitForTimeout(wait); return true; } return false; };
 
   await visit('menu');
@@ -47,11 +50,11 @@ async function session(reducedMotion) {
   await page.reload({ waitUntil: 'load' }); // cambiar solo el hash no recarga: el estado en memoria pisaría el inyectado
   await visit('historia', async () => { await tapIf('[data-skip]', 400); });
   await visit('aire', async () => {
-    await tapIf('#chutes .chip[data-id="grande"]');
+    await ajustes('#chutes .chip[data-id="grande"]');
     await tapIf('#drop', 600); await tapIf('#drop', 200); // soltar y abrir el paracaídas a mano
     await page.waitForTimeout(5000);
   });
-  await visit('aire/m5', async () => { await tapIf('[data-skip]'); await tapIf('#chutes .chip[data-id="grande"]'); await tapIf('#drop', 5000); });
+  await visit('aire/m5', async () => { await tapIf('[data-skip]'); await ajustes('#chutes .chip[data-id="grande"]'); await tapIf('#drop', 5000); });
   await visit('aire/m8', async () => { await tapIf('[data-skip]'); });
   await visit('codice/2', async () => { await tapIf('[data-next]'); await tapIf('[data-next]'); });
   await visit('examen/2', async () => { await tapIf('[data-start]'); await tapIf('.opt', 500); });
@@ -61,8 +64,8 @@ async function session(reducedMotion) {
     missions: { m1: 3, m2: 3, m3: 3, m4: 3, m5: 3, m6: 3, m7: 3, m8: 3 }, exam: { best: 8, attempts: 1, passed: true }, exam2: { best: 8, attempts: 1, passed: true } })));
   await page.reload({ waitUntil: 'load' });
   await visit('historia', async () => { await tapIf('[data-skip]', 400); });
-  await visit('impacto', async () => { await tapIf('#fundas .chip[data-id="unicel"]'); await tapIf('#drop', 4500); });
-  await visit('impacto/m11', async () => { await tapIf('[data-skip]'); await tapIf('#fundas .chip[data-id="hule"]'); await tapIf('#drop', 4000); });
+  await visit('impacto', async () => { await ajustes('#fundas .chip[data-id="unicel"]'); await tapIf('#drop', 4500); });
+  await visit('impacto/m11', async () => { await tapIf('[data-skip]'); await ajustes('#fundas .chip[data-id="hule"]'); await tapIf('#drop', 4000); });
   await visit('codice/3', async () => { await tapIf('[data-next]'); await tapIf('[data-next]'); });
   await visit('examen/3', async () => { await tapIf('[data-start]'); await tapIf('.opt', 500); });
   // Final y logros, con el Acto 3 terminado.
@@ -70,6 +73,8 @@ async function session(reducedMotion) {
     missions: { m1: 3, m2: 3, m3: 3, m4: 3, m5: 3, m6: 3, m7: 3, m8: 3, m9: 3, m10: 3, m11: 3, m12: 3 },
     exam: { best: 8, attempts: 1, passed: true }, exam2: { best: 7, attempts: 1, passed: true }, exam3: { best: 6, attempts: 1, passed: true } })));
   await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(400);
+  await tapIf('[data-share-logro]', 1500); // M11: la celebración del logro ofrece Compartir (headless: descarga + WhatsApp)
   await visit('historia', async () => { await tapIf('[data-skip]', 400); });
   await visit('simulador/f1', async () => { await tapIf('[data-skip]'); await page.fill('#hnum', '1'); await tapIf('#drop', 2600); });
   await visit('aire/f2', async () => { await tapIf('[data-skip]'); });

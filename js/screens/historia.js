@@ -14,20 +14,25 @@ import { OBJ_SPRITES, GAL1 } from '../gfx/sprites.js';
 import { isDone, isUnlocked, missionById, missionRoute } from '../progress.js';
 import { get, set } from '../state.js';
 import { go } from '../nav.js';
+import { artCanvas } from '../gfx/imagenes.js';
+import { playVideo } from '../ui/video.js';
+import { VIDEOS } from '../data/videos.js';
 
 const actOpen = (a) => isUnlocked(a.map[0]);
 
 export default function historia(el, arg) {
-  let stop = null;
-  function scene(title, lines, then) {
+  let stop = null, stopVideo = null, gone = false;
+  // M11: si hay cinemática (assets/video/*.mp4) se reproduce antes del diálogo; si no existe, se omite.
+  function scene(title, lines, then, video) {
     el.innerHTML = `<h1 style="font-size:15px">${title}</h1><p class="tag">Toca el cuadro para avanzar</p><div id="scene"></div>`;
-    stop = playScene(el.querySelector('#scene'), lines, then);
+    const talk = () => { if (gone) return; stop = playScene(el.querySelector('#scene'), lines, then); };
+    if (video) stopVideo = playVideo(video, talk); else talk();
   }
-  const intro = () => scene('PRÓLOGO', INTRO, () => { set({ seenIntro: true }); map(); });
+  const intro = () => scene('PRÓLOGO', INTRO, () => { set({ seenIntro: true }); map(); }, 'intro');
   function map() {
     const s = get();
     const fresh = ACTS.find((a) => a.intro && actOpen(a) && !s.seenActs.includes(a.n));
-    if (fresh) return scene(fresh.title, fresh.intro, () => { set({ seenActs: [...get().seenActs, fresh.n] }); map(); });
+    if (fresh) return scene(fresh.title, fresh.intro, () => { set({ seenActs: [...get().seenActs, fresh.n] }); map(); }, Object.keys(VIDEOS).find((k) => VIDEOS[k].act === fresh.n));
     const expand = (n) => ({ ...n, ...(n.type === 'mision' ? missionById(n.id) : {}), done: isDone(n.id), open: isUnlocked(n) });
     const acts = ACTS.filter((a, i) => i === 0 || actOpen(a)).map((a) => ({ ...a, nodes: a.map.map(expand) }));
     const all = [...acts.flatMap((a) => a.nodes), expand(NEXT)];
@@ -40,11 +45,11 @@ export default function historia(el, arg) {
       ${[...acts].reverse().map((a) => `<h2 class="act-title">${a.title}</h2>
       <ol class="map">${a.nodes.map((n) => li(n, n === next, s)).join('')}${a === cur ? li(lockedAct ? { ...lockedAct.map[0], id: 'lock', type: 'proximo', title: lockedAct.title, brief: 'Completa este acto para abrir el siguiente.', open: false } : all[all.length - 1], false, s) : ''}</ol>`).join('')}
       <button class="btn ghost" data-replay>↺ Ver el prólogo otra vez</button>`;
-    el.querySelector('.slot-gal').replaceWith(pxCanvas(GAL1, { cls: 'avatar sm gal', label: 'GAL-1' }));
+    el.querySelector('.slot-gal').replaceWith(artCanvas('retrato-gal', GAL1, { w: 64, cls: 'avatar sm gal', label: 'GAL-1' }));
     el.querySelectorAll('.node-btn').forEach((b) => {
       const n = all.find((x) => x.id === b.dataset.id), ico = b.querySelector('.node-ico');
       if (!n) { ico.textContent = '?'; return; }
-      if (n.type === 'mision') { ico.appendChild(planetCanvas(PLANETS.find((p) => p.id === n.planet), 16, 'px node-px')); ico.appendChild(pxCanvas(OBJ_SPRITES[n.obj], { cls: 'px node-obj' })); }
+      if (n.type === 'mision') { ico.appendChild(planetCanvas(PLANETS.find((p) => p.id === n.planet), 16, 'px node-px')); ico.appendChild(artCanvas('obj-' + n.obj, OBJ_SPRITES[n.obj], { cls: 'px node-obj' })); }
       else ico.textContent = { codice: '◆', examen: '✎', logros: '★' }[n.type] || '?';
       b.onclick = () => go(n.type === 'mision' ? missionRoute(n) : n.type + (n.act > 1 ? '/' + n.act : ''));
     });
@@ -71,5 +76,5 @@ export default function historia(el, arg) {
     return n.done ? 'Completo ✓' : `${cards.filter((c) => s.codice.includes(c.id)).length} / ${cards.length} fragmentos`;
   }
   if (arg === 'intro' || !get().seenIntro) intro(); else map();
-  return () => stop && stop();
+  return () => { gone = true; stopVideo && stopVideo(); stop && stop(); };
 }

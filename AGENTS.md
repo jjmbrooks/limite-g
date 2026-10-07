@@ -15,7 +15,8 @@ Lo usan estudiantes de 15–18 años desde su **celular** (muchos con datos limi
 ## Decisiones tomadas (no las cambies sin hablar con el autor)
 - **Física progresiva por actos**: Acto 1 sin aire (Luna, Marte, Tierra ideal, Júpiter); Acto 2 con aire (Tierra, Venus, Titán); Acto 3 impacto (Europa, Ío); Final en Estación Entropía. Cada acto añade un concepto; no adelantes fórmulas. Rangos: Cadete → Piloto (examen 1) → Capitana (examen 2) → Comandante (examen 3).
 - **Sin servidor ni cuentas**: progreso en `localStorage` (clave versionada `limiteg.v1`, módulo `js/state.js`). Firebase queda como «Futuro».
-- **Pixel art**: sprites definidos como matrices de texto + paleta en JS, renderizados a `<canvas>` con `image-rendering: pixelated`. Paleta del mood board: azul noche, teal, naranja, magenta, crema.
+- **Pixel art 16-bit (M11)**: el arte principal son PNG pequeños estilo SNES en `assets/sprites/` y `assets/fondos/` (generados con IA usando `docs/mood-pixel.jpg` como referencia y reducidos con `python3 scripts/arte16.py CARPETA_ORIGINALES`), cargados por `js/gfx/imagenes.js`; las matrices de texto de `js/gfx/sprites.js` quedan como **respaldo** si un PNG no carga. Todo con `image-rendering: pixelated`. Paleta del mood board: azul noche, teal, naranja, magenta, crema. La interfaz imita ventanas de SNES (marco doble, degradado, botones biselados); no vuelvas a bordes planos tipo MS-DOS.
+- **Simuladores a pantalla completa (M11)**: la escena (`js/ui/escena.js`) ocupa todo el alto sin scroll (360×640 y 390×844); la altura se arrastra sobre la escena (no hay deslizador), SOLTAR va superpuesto (≥ 56 px), los ajustes van en la hoja «⚙ Ajustes» y los resultados aparecen encima tras el impacto. Con el sabotaje «regla» no se muestra ninguna altura.
 - **Mobile first**: diseño para 360 px; controles táctiles ≥ 44 px; audio solo tras la primera interacción; respetar `prefers-reduced-motion`.
 - **Sin compilación**: HTML + CSS + JavaScript con módulos ES nativos. Nada de npm en tiempo de ejecución, nada de frameworks.
 - **Estructura modular obligatoria**: un archivo por pantalla, por dato y por sistema. **Nunca** empaquetes el juego en un solo `index.html` (ya se intentó con un build.sh y se descartó).
@@ -33,17 +34,20 @@ js/progress.js           progresión de la historia de todos los actos (isDone /
 js/state.js              guardado local (get/set/addScore), emite el evento 'state'
 js/audio.js              música chiptune y efectos con WebAudio (sin archivos)
 js/physics.js            fórmulas puras (Ep, Ec, v, t), caída con aire (createFall/simulateFall, paso fijo) e impacto (impact: F·d = Ec)
-js/gfx/                  arte pixel: palette.js (paleta única), sprites.js (matrices de texto),
+js/gfx/                  arte pixel: imagenes.js (PNG 16-bit con respaldo), palette.js (paleta única), sprites.js (matrices de texto),
                          pixel.js (render a canvas + planetas generados), scenery.js (escenarios), starfield.js (fondo)
 js/data/                 datos puros, sin DOM (planetas, paquetes, …) → se validan en tests/
 js/ui/                   piezas de interfaz reutilizables (anims.js, anims-aire.js y anims-impacto.js del Códice, speakers.js retratos,
                          dialogo.js máquina de escribir, grafica.js gráfica v(t) pixel, toast.js avisos de logros,
-                         tarjeta.js tarjeta PNG de logros + Web Share / descarga / wa.me)
+                         tarjeta.js tarjeta PNG de logros + Web Share / descarga / wa.me, compartir.js celebración de logro con «Compartir»,
+                         escena.js escena de juego de los simuladores (paralaje, nave, altura arrastrable, gameShell/wireShell),
+                         video.js cinemáticas opcionales de assets/video/ (datos en js/data/videos.js))
 js/screens/              una pantalla por archivo: export default (el, arg) => cleanup?
                          (simulador = Acto 1 sin aire, aire = Acto 2, impacto = Acto 3, logros = vitrina;
                          codice/N y examen/N abren el acto N; las misiones del Final reutilizan las tres pantallas)
-assets/                  iconos/ (PWA), fuentes/ (Press Start 2P y VT323, OFL; sin Google Fonts) y lo que se agregue
-docs/                    historia, mood board, QA manual, copia de workflows
+assets/                  iconos/ (PWA), fuentes/ (Press Start 2P y VT323, OFL; sin Google Fonts), sprites/ y fondos/ (arte 16-bit, M11),
+                         video/ (opcional: intro.mp4, entrega.mp4, final.mp4 de Grok Imagine; ver docs/videos/prompts.md)
+docs/                    historia, mood board, QA manual, copia de workflows, videos/ (imágenes iniciales 9:16 + prompts para Grok Imagine)
 scripts/qa.sh            control de calidad; scripts/qa/*.mjs son sus pasos
 scripts/hark-commit.sh   commit firmado por Hark + línea de CHANGELOG
 tests/*.test.mjs         pruebas node:test (física y datos)
