@@ -1,0 +1,4 @@
+# Paquete de publicación: se genera en local y se sube a mano por la web de GitHub.
+release.zip
+node_modules/
+.DS_Store

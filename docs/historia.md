@@ -25,7 +25,7 @@ Filosofía de Nova: confía en la física, la precisión y la armonía con las l
 - Acto 1, Luna (g=1.62) y Marte (3.71), sin aire: Ep=mgh, Ec=½mv², conservación, v=√(2gh). Sabotaje: mapas con alturas falsas.
 - Acto 2, Tierra (9.81), Venus (8.87) y Titán (1.35, atmósfera densa): resistencia del aire, velocidad terminal, paracaídas. Sabotaje: tormentas.
 - Acto 3, Europa (hielo, 1.31) e Ío: fuerza de impacto (F·d = Ec), fundas, suelos. Sabotaje: cambia superficies.
-- Final, Estación Entropía (órbita de Júpiter, g=24.79): Caos quiere cortar las comunicaciones del sistema; Nova entrega el Núcleo de Comunicación combinando todo.
+- Final, Estación Entropía (órbita de Júpiter, g=24.79): Caos quiere cortar las comunicaciones del sistema; Nova entrega el Núcleo de Comunicación combinando todo en tres tramos: cubierta sin aire (altura exacta), domo presurizado con tormenta (paracaídas a mano) y plataforma del relé con suelo cambiante (funda para el peor caso).
 
 ## Recompensas
-Rangos, insignias por planeta, logros compartibles (imagen para WhatsApp, V2).
+Rangos (Cadete → Piloto → Capitana → Comandante; Comandante se añadió con el Acto 3), insignias por planeta, logros (vitrina en el juego desde M9) y logros compartibles (imagen para WhatsApp, V2).

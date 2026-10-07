@@ -1,0 +1,25 @@
+name: Calidad Límite G
+
+# Corre el control de calidad (scripts/qa.sh) en cada push y pull request.
+# Copia de referencia: el archivo real vive en .github/workflows/calidad.yml
+# y se crea a mano en GitHub (Add file → Create new file), porque release.zip no incluye .github/.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Control de calidad
+        run: bash scripts/qa.sh
