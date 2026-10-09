@@ -48,14 +48,14 @@ function prepOf(key, im) {
   const k = ih / 320, sky = Math.round(L.sky * k), gnd = Math.round(L.gnd * k);
   let avg = () => [40, 60, 120];
   try {
-    const d = x.getImageData(0, 0, iw, ih).data;
+    const d = x.getImageData(0, 0, iw * 2, ih).data;
     avg = (row) => { // color más frecuente de la fila (en pixel art es el «fondo» de esa fila)
       const n = new Map(); let best = 0, col = [0, 0, 0];
       for (let i = 0; i < iw; i++) { const o = (row * iw * 2 + i) * 4, k = (d[o] << 16) | (d[o + 1] << 8) | d[o + 2], c = (n.get(k) || 0) + 1; n.set(k, c); if (c > best) { best = c; col = [d[o], d[o + 1], d[o + 2]]; } }
       return col;
     };
   } catch { /* lienzo «contaminado» (file://): colores por omisión */ }
-  const r = { c, iw, ih, sky, gnd, nube: L.nube, top: avg(0) };
+  const r = { c, iw, ih, sky, gnd, nube: L.nube, top: avg(0), hor: avg(Math.max(0, sky - 1)), farBot: avg(Math.max(0, gnd - 1)), plain: avg(Math.min(ih - 1, gnd + 1)) };
   prep.set(key, r); return r;
 }
 // Nubes (posición fija en el «cielo» con paralaje) y estrellas: deterministas.
@@ -74,6 +74,8 @@ export function createScene(host, opts) {
   const cv = host.querySelector('.stage-cv'), g = cv.getContext('2d');
   const tag = host.querySelector('.h-tag'), hint = host.querySelector('.drag-hint');
   host.tabIndex = 0;
+  // La escena nunca se desplaza por dentro (un foco o un panel podía «scrollearla» y descuadrar todo).
+  host.addEventListener('scroll', () => { if (host.scrollTop || host.scrollLeft) { host.scrollTop = 0; host.scrollLeft = 0; } });
   host.setAttribute('role', 'slider');
   host.setAttribute('aria-label', o.label || 'Altura de la nave: arrastra arriba o abajo, o usa las flechas');
   // GROUND0: y en pantalla del suelo cuando la cámara está abajo (borde inferior de la zona de vuelo).
@@ -122,8 +124,13 @@ export function createScene(host, opts) {
   // Arrastre: 60 % del alto de la escena multiplica la altura ×10 (preciso cerca del suelo y rápido arriba).
   let drag = null;
   const canDrag = () => !o.fixed && !o.hideRuler && !locked;
+  // Tras un lanzamiento la escena queda «bloqueada» mostrando el impacto; tocarla de nuevo rearma la nave
+  // (la pantalla reinicia con o.rearm(); si devuelve false, todavía está cayendo y no se puede).
+  const rearm = () => locked && halted && !o.fixed && !o.hideRuler && o.rearm && o.rearm() !== false;
   host.addEventListener('pointerdown', (e) => {
-    if (!canDrag() || e.target.closest('button,input,a,.result,.sheet,#scene')) return;
+    if (e.target.closest('button,input,a,.result,.sheet,#scene')) return;
+    if (locked) rearm();
+    if (!canDrag()) return;
     drag = { y: e.clientY, h }; host.setPointerCapture(e.pointerId); host.classList.add('dragging'); hint.classList.add('gone');
   });
   host.addEventListener('pointermove', (e) => {
@@ -134,7 +141,9 @@ export function createScene(host, opts) {
   const end = () => { drag = null; host.classList.remove('dragging'); };
   host.addEventListener('pointerup', end); host.addEventListener('pointercancel', end);
   host.addEventListener('keydown', (e) => {
-    if (!canDrag() || e.target !== host) return;
+    if (e.target !== host) return;
+    if (locked && /^(Arrow|Page)/.test(e.key)) rearm();
+    if (!canDrag()) return;
     const k = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
     if (!k) return;
     e.preventDefault(); setHeight(h + k * stepOf(h));
@@ -190,17 +199,22 @@ export function createScene(host, opts) {
       g.globalAlpha = 1;
     }
     // Capas de la imagen y los huecos que abre el paralaje vertical (color medio de la fila de borde).
-    if (P.sky > 0) { // hueco entre cielo y lejanas: se repiten hacia abajo las últimas filas del cielo (horizonte)
+    // Los huecos que abre el paralaje se rellenan con el color de su fila de borde (antes se repetían filas
+    // de la imagen y se veían texturas duplicadas al subir).
+    if (P.sky > 0) { // hueco entre cielo y lejanas: color del horizonte
       tile(P, 0, P.sky, ySky, scroll * 0.05);
-      const R = Math.min(8, P.sky);
-      for (let y = ySky + P.sky; y < yFar; y += R) tile(P, P.sky - R, Math.min(R, Math.ceil(yFar - y)), y, scroll * 0.05);
+      const a = Math.floor(ySky + P.sky) - 1, b = Math.ceil(yFar) + 1;
+      if (b > a) { g.fillStyle = hex(P.hor); g.fillRect(0, a, W, b - a); }
     }
     tile(P, P.sky, P.gnd - P.sky, yFar, scroll * 0.25);
-    // Hueco entre lejanas y suelo: se repiten hacia arriba las primeras filas del suelo (llanura a lo lejos).
-    const yFarEnd = yFar + P.gnd - P.sky, R = Math.min(16, P.ih - P.gnd);
-    for (let y = yGnd - R; y + R > yFarEnd; y -= R) {
-      const cut = Math.max(0, Math.ceil(yFarEnd - y));
-      tile(P, P.gnd + cut, R - cut, y + cut, scroll * 0.7);
+    // Hueco entre lejanas y suelo: degradado de la base de las lejanas a la llanura del suelo, con tramado.
+    const yFarEnd = Math.floor(yFar + P.gnd - P.sky) - 1, yG = Math.ceil(yGnd) + 1;
+    if (yG > yFarEnd && yFarEnd < H && yG > 0) {
+      const gr = g.createLinearGradient(0, yFarEnd, 0, yG);
+      gr.addColorStop(0, hex(P.farBot)); gr.addColorStop(Math.min(1, 24 / (yG - yFarEnd)), hex(P.plain)); gr.addColorStop(1, hex(P.plain));
+      g.fillStyle = gr; g.fillRect(0, yFarEnd, W, yG - yFarEnd);
+      const y1 = Math.max(0, yFarEnd), y2 = Math.min(H, yG);
+      if (y2 > y1) { g.globalAlpha = 0.12; g.drawImage(dither(), 0, y1, W, y2 - y1, 0, y1, W, y2 - y1); g.globalAlpha = 1; }
     }
     tile(P, P.gnd, P.ih - P.gnd, yGnd, scroll * 0.7);
     // Nubes en el cielo (paralaje intermedio), solo en mundos con atmósfera visible.
@@ -284,11 +298,16 @@ export function createScene(host, opts) {
     // Durante la caída se congela el zoom; la cámara sigue al paquete (focus) hasta ver el suelo.
     lock(v) {
       locked = v; focusH = null;
-      if (v) { shown = h; spanLock = span; camLock = cam; }
+      // La caída se encuadra desde la nave (no desde donde quedó la cámara tras el lanzamiento anterior).
+      if (v) { shown = h; spanLock = spanOf(h); camLock = camFor(h, spanLock); }
       hint.classList.add('gone');
+      if (!v) hint.textContent = '⇕ arrastra para subir o bajar';
     },
     focus(v) { focusH = v == null ? null : Math.max(0, v); }, // altura (m) del paquete que la cámara debe seguir
-    halt(v) { halted = v; }, // tras el impacto el fondo frena suavemente
+    halt(v) { // tras el impacto el fondo frena suavemente y se invita a otro lanzamiento
+      halted = v;
+      if (v && o.rearm && !o.fixed && !o.hideRuler) { hint.textContent = '⇕ arrastra para otro lanzamiento'; hint.classList.remove('gone'); }
+    },
     setFixed(v) { o.fixed = v; }, setHideRuler(v) { o.hideRuler = v; },
     destroy() { cancelAnimationFrame(raf); ro.disconnect(); },
   };

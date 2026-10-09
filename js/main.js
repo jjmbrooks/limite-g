@@ -24,6 +24,7 @@ let cleanup = null;
 function render() {
   const [name, arg] = (location.hash.slice(1) || 'menu').split('/');
   musicFor(ROUTES[name] ? name : 'menu', arg);
+  document.querySelector('.hud').classList.toggle('home', !ROUTES[name] || name === 'menu'); // en el menú no hay «volver»
   if (cleanup) cleanup();
   app.innerHTML = '';
   const view = document.createElement('section'); view.className = 'fade-in'; app.appendChild(view);

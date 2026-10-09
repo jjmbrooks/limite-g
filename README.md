@@ -1,7 +1,7 @@
 # Límite G
 
 Juego web en pixel art para aprender **energía potencial, energía cinética y caída libre** (Física, nivel preparatoria).
-Nova, mensajera de la Red Postal Interplanetaria, debe entregar paquetes frágiles por caída en distintos planetas sin rebasar su **Límite G**, mientras el Dr. Caos sabotea sus rutas.
+Nova, mensajera de la Red Postal Interplanetaria, debe entregar paquetes frágiles por caída en distintos planetas sin rebasar su **resistencia**, mientras el Dr. Caos sabotea sus rutas.
 
 - Juega: https://jjmbrooks.github.io/limite-g/
 - Plan y punto de retoma: [PLAN.md](PLAN.md)

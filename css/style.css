@@ -76,7 +76,7 @@ input[type=range]{width:100%;accent-color:var(--orange);height:32px}
 .quote{color:var(--dim);font-size:20px}
 .anim{border:3px solid #2a3570;background:#000}
 .anim canvas{width:100%;display:block;image-rendering:pixelated;aspect-ratio:5/3}
-.formula{font-family:'Press Start 2P';font-size:11px;line-height:1.8;color:var(--yellow);background:#0e1430;border-left:var(--px) solid var(--yellow);padding:8px}
+.formula{font-family:'Press Start 2P';font-size:11px;line-height:1.8;color:var(--yellow);background:#0e1430;border:2px solid var(--yellow);border-radius:4px;padding:8px}
 .example{margin-top:8px;background:#0e1430;border:3px dashed #2a3570;padding:8px}
 .example summary{cursor:pointer;color:var(--teal);min-height:44px}
 .example ol{margin:8px 0 0 22px}
@@ -244,7 +244,7 @@ h2{color:var(--teal);text-shadow:2px 2px 0 var(--ink-d)}
 .game .stage:focus-visible{outline:3px solid var(--yellow);outline-offset:-3px}
 .stage-cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;display:block}
 .g-top{position:absolute;left:6px;right:6px;top:6px;display:flex;flex-direction:column;gap:5px;pointer-events:none;z-index:2}
-.g-top .tabs,.g-top label,.g-top input,.g-top a{pointer-events:auto}
+.g-top .tabs,.g-top label,.g-top input,.g-top a,.g-top button{pointer-events:auto}
 .g-top .tabs{margin:0}
 .g-top .tabs a,.g-top .tab-off{min-height:36px;font-size:18px}
 .g-title{font-family:'Press Start 2P';font-size:10px;line-height:1.4;color:#ffb15c;text-shadow:2px 2px 0 var(--ink-d);background:linear-gradient(180deg,#33449acc,#121a4acc);border:2px solid var(--frame);border-radius:6px;box-shadow:0 0 0 2px var(--ink-d);padding:6px 8px}
@@ -272,7 +272,7 @@ h2{color:var(--teal);text-shadow:2px 2px 0 var(--ink-d)}
 .g-cfg small{font-size:15px;margin-top:2px}
 /* Panel de resultados (aparece tras el impacto) */
 .result{position:absolute;left:8px;right:8px;top:6px;max-height:calc(100% - 150px);overflow:auto;z-index:4;padding:8px 10px;visibility:hidden;opacity:0;transform:translateY(-16px) scale(.97);transition:opacity .25s ease,transform .25s ease,visibility 0s .25s;touch-action:pan-y;cursor:auto}
-.result.open{visibility:visible;opacity:1;transform:none;transition:opacity .25s ease,transform .25s cubic-bezier(.2,.9,.3,1.2)}
+.result.open{visibility:visible;opacity:1;transform:none;transition:opacity .25s ease,transform .25s cubic-bezier(.22,1,.36,1)}
 .result .verdict{margin:0;padding:4px;font-size:13px;line-height:1.5}
 .result .btn{margin:6px 0}
 .result [data-close]{display:block;margin:6px 0 0 auto}
@@ -314,3 +314,90 @@ h2{color:var(--teal);text-shadow:2px 2px 0 var(--ink-d)}
 .video-poster{width:100%;height:100%;object-fit:contain}
 .video-poster.kb{animation:kb-zoom 4s ease-out both}
 @keyframes kb-zoom{from{transform:scale(1)}to{transform:scale(1.08)}}
+
+/* M12: menú principal rediseñado (una acción principal, ruta de aprendizaje, mosaico secundario). */
+.hud.home #btn-home{visibility:hidden}
+.menu-top{display:flex;flex-direction:column;align-items:center}
+.menu-top h1{margin:6px 0 2px}.menu-top .tag{margin-bottom:6px}
+.menu-top .hero{margin:0 0 4px;min-height:56px}
+.status-strip{display:flex;justify-content:space-between;gap:6px;margin:4px 0 10px;padding:8px 10px;border:2px solid #2a3570;border-radius:6px;background:#0e1430cc;color:var(--dim);font-size:19px}
+.status-strip b{color:var(--yellow);font-weight:normal}
+.next-card{position:relative;padding:14px 14px 10px;margin:0 0 16px;border:3px solid var(--yellow);border-radius:8px;background:linear-gradient(180deg,#24306e 0%,#182158 60%,#121a46 100%);box-shadow:0 0 0 3px #05071a,6px 8px 0 2px rgba(0,0,0,.5),0 0 18px rgba(255,230,109,.18)}
+.next-card h2{color:var(--ink);font-size:13px;margin:2px 0 6px}
+.next-card .kicker{font-family:'Press Start 2P';font-size:9px;color:var(--teal);margin:0 0 8px;letter-spacing:.5px}
+.next-card p{margin:0 0 8px;line-height:1.15}
+.next-card small{display:block;font-family:'Press Start 2P';font-size:8px;color:var(--orange)}
+.next-row{display:flex;gap:10px;align-items:center;margin:10px 0 4px}
+.next-ico{flex:none;width:52px;height:52px;position:relative;display:grid;place-items:center;font-size:30px;color:var(--teal);background:#0e1430;border:3px solid #2a3570;border-radius:6px}
+.next-brief{color:var(--dim);font-size:20px}
+.progress{height:10px;background:#0a0d22;border:2px solid #2a3570;border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--teal) 0 8px,#1fb9a3 8px 12px)}
+.btn.big{font-size:15px;text-align:center;padding:18px 12px;margin:10px 0 4px;animation:glow 2.4s ease-in-out infinite}
+@keyframes glow{50%{filter:brightness(1.12)}}
+.linkish{background:none;border:none;color:var(--teal);font:inherit;font-size:19px;cursor:pointer;padding:10px 4px;min-height:44px;text-decoration:underline;text-underline-offset:3px}
+.next-card .linkish{display:block;margin:0 auto}
+h2.sec{font-size:10px;color:var(--dim);margin:14px 2px 8px;letter-spacing:1px}
+.ruta{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:6px}
+.ruta li{display:flex;gap:10px;align-items:center;padding:8px 10px;border:2px solid #2a3570;border-radius:6px;background:#0e1430cc}
+.ruta b{display:block;font-family:'Press Start 2P';font-size:9px;line-height:1.5;color:var(--ink)}
+.ruta small{display:block;color:var(--dim);font-size:18px;line-height:1.1}
+.ruta-n{flex:none;width:30px;height:30px;display:grid;place-items:center;font-family:'Press Start 2P';font-size:11px;border:2px solid #2a3570;border-radius:50%;color:var(--dim)}
+.ruta .done{border-color:#1f6f66}.ruta .done .ruta-n{background:var(--teal);color:#0a0d22;border-color:var(--teal)}
+.ruta .cur{border-color:var(--yellow)}.ruta .cur .ruta-n{background:var(--yellow);color:#0a0d22;border-color:var(--yellow)}.ruta .cur b{color:var(--yellow)}
+.ruta .locked{opacity:.5}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:112px;padding:12px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;border:3px solid #3a4aa0;border-radius:8px;background:linear-gradient(180deg,#1d2760,#121a46);box-shadow:inset 0 0 0 2px #05071a,4px 5px 0 rgba(0,0,0,.5)}
+.tile:active{transform:translate(2px,2px)}
+.tile.teal{border-color:var(--teal)}
+.tile-ico{font-size:30px;line-height:1;color:var(--teal)}
+.tile b{font-family:'Press Start 2P';font-size:10px;line-height:1.5;color:var(--orange)}
+.tile small{color:var(--dim);font-size:18px;line-height:1.05}
+.menu-foot{text-align:center;color:var(--dim);margin:14px 0 0}
+@media (prefers-reduced-motion: reduce){.btn.big{animation:none}}
+/* M12: predicción antes de soltar y cálculo tras el impacto (simulador sin aire). */
+.predict{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:18px;color:var(--dim)}
+.pchip{flex:1;min-height:36px;font:inherit;font-size:18px;color:var(--ink);background:#0e1430d9;border:2px solid #2a3570;border-radius:6px;cursor:pointer}
+.pchip.on{border-color:var(--yellow);color:var(--yellow);background:#1f2550}
+.calc{display:block;font-family:'VT323';font-size:19px;line-height:1.15;margin-top:8px;padding:6px 8px;color:var(--ink);background:#0a0d22b3;border:2px solid var(--teal);border-radius:4px;text-align:left}
+.calc b{color:var(--yellow);font-weight:normal}
+.pred.ok{color:var(--teal)}.pred.ko{color:var(--orange)}
+.predict>span{background:#0a0d22d9;color:var(--ink);padding:6px 6px;border-radius:4px}
+.game .stage{overflow:clip}
+/* ═══════════ M12.1 · Pasada Impeccable (crítica + detector) ═══════════
+   Contraste, objetivos táctiles de 44 px, avisos fuera de la zona del pulgar en simuladores,
+   colores de correcto/incorrecto del examen, íconos pixel en lugar de glifos, sin halos de brillo. */
+:root{--dim-on-panel:#b9c2e6}
+[hidden]{display:none!important}
+.panel .muted,.panel .quote,.quote,.sheet .muted,.tile small,.ruta small,.next-brief,.status-strip,.logro small{color:var(--dim-on-panel)}
+/* Bloqueados legibles: se apaga el ícono/borde, no el texto */
+.logro{opacity:1}.logro:not(.on) .logro-ico{opacity:.55}.logro:not(.on){border-color:#46559c}
+.ruta .locked{opacity:1;border-style:dashed}.ruta .locked .ruta-n{border-color:#46559c}
+.ruta-lockmsg{color:#c8a6ff!important}
+.node-btn[disabled]{opacity:1;filter:saturate(.35)}.node-btn[disabled] .node-body b{color:var(--dim-on-panel)}
+.tile b,.node-body b{color:#ffb15c}
+/* Íconos pixel 12×12 escalados en múltiplos enteros */
+.ico-px{image-rendering:pixelated;width:24px;height:24px}
+.tile-ico.ico-px,.tile .ico-px{width:36px;height:36px}
+.next-px{width:36px;height:36px}
+.ruta-n .ico-px{width:18px;height:18px}
+.logro-ico .ico-px{width:24px;height:24px}
+/* Menú: metadatos del acto en línea (sin rótulo sobre el título) */
+.next-meta{display:flex;justify-content:space-between;font-family:'Press Start 2P';font-size:9px;color:var(--teal);margin:0 0 8px}
+.next-card small{margin-top:4px}
+.progress i{background:var(--teal)}
+/* Objetivos táctiles ≥ 44 px */
+.g-top .tabs a,.g-top .tab-off,.pchip{min-height:44px}
+/* Avisos: en los simuladores se elevan sobre la barra de acción */
+body:has(#app.full) .toasts{bottom:calc(max(8px,env(safe-area-inset-bottom)) + 84px)} /* justo encima de SOLTAR, sin taparlo ni tapar el resultado */
+/* Examen: correcto/incorrecto visibles aunque .btn.ghost venga después (y con ✓/✗, no solo color) */
+.opts .btn.opt.right{color:var(--teal);border-color:var(--teal);background:#0e2a2a;box-shadow:inset 0 0 0 3px var(--teal),0 5px 0 var(--ink-d);filter:none;opacity:1}
+.opts .btn.opt.wrong{color:#ff8080;border-color:var(--red);background:#2a0e14;box-shadow:inset 0 0 0 3px var(--red),0 5px 0 var(--ink-d);filter:none;opacity:1}
+.opt .mark{font-family:'Press Start 2P';font-size:12px}
+/* Sin halos de brillo: el logro nuevo destaca con marco que parpadea por pasos (estilo 16-bit) */
+@keyframes marco16{50%{border-color:var(--orange)}}
+.toast.logro-new{animation:fade16 .32s cubic-bezier(.22,1,.36,1),marco16 .6s steps(1) 3}
+/* Paneles deslizables sin rebote (ease-out exponencial) */
+/* Superficies del navegador con la paleta */
+::selection{background:var(--magenta);color:#fff}
+html{scrollbar-color:var(--teal) #0a0d22;accent-color:var(--orange);caret-color:var(--yellow)}
+.readout b,.hud-right span,#clock{font-variant-numeric:tabular-nums}

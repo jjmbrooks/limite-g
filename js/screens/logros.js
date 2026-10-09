@@ -3,6 +3,7 @@
 import { LOGROS } from '../data/logros.js';
 import { get } from '../state.js';
 import { portrait } from '../ui/speakers.js';
+import { ico, montarIconos } from '../gfx/iconos.js';
 import { go } from '../nav.js';
 import { set } from '../state.js';
 import { drawCard, shareCard, shareText, whatsappLink, cleanName } from '../ui/tarjeta.js';
@@ -15,7 +16,7 @@ export default function logros(el) {
       <p>${n === LOGROS.length ? '"¡Todas! La energía no se destruye; se transforma en el impacto perfecto."' : '"Cada insignia es una prueba de que la física funciona. ¡Vamos por las que faltan!"'}</p></div></div>
     <ul class="logros">${LOGROS.map((l) => {
       const on = mine.includes(l.id);
-      return `<li class="logro ${on ? 'on' : ''}"><span class="logro-ico" aria-hidden="true">${on ? l.icon : '?'}</span>
+      return `<li class="logro ${on ? 'on' : ''}"><span class="logro-ico" aria-hidden="true">${on ? l.icon : ico('candado')}</span>
         <span><b>${l.title}</b><small>${l.desc}</small><span class="node-state">${on ? 'Desbloqueado ✓' : 'Bloqueado'}</span></span></li>`;
     }).join('')}</ul>
     <div class="panel compartir">
@@ -28,6 +29,7 @@ export default function logros(el) {
     </div>
     <button class="btn" data-map>▶ Mapa de misiones</button>
     <button class="btn ghost" data-creditos>♪ Créditos</button>`;
+  montarIconos(el);
   el.querySelector('.slot').replaceWith(portrait('nova', 'sm'));
   el.querySelector('[data-map]').onclick = () => go('historia');
   el.querySelector('[data-creditos]').onclick = () => go('creditos');

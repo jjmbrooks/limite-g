@@ -59,7 +59,8 @@ export default function impacto(el, arg) {
   $('.slot-gal')?.replaceWith(artCanvas('retrato-gal', GAL1, { w: 64, cls: 'avatar sm gal', label: 'GAL-1' }));
   const sc = createScene($('.stage'), {
     planet: pl, h0, hMin: 1, hMax: 500, fixed: !!mission,
-    onHeight: (v) => { if (running) return; h0 = v; reset(); }, paint: drawStage,
+    onHeight: (v) => { if (running) return; h0 = v; reset(); },
+    rearm: () => (running ? false : reset()), paint: drawStage,
   });
   const FM = () => fMax(obj.limit);
   const calc = (s = soil) => impact({ m: obj.m, g: pl.g, h: h0, side: sideOf(obj), soilD: s.d, mat: funda.rho ? funda : null, t: funda.rho ? t : 0 });
@@ -99,10 +100,10 @@ export default function impacto(el, arg) {
     sc.lock(false); sc.halt(false);
     refreshUI(); readouts(null); drawZoom();
   }
-  // Valores: antes de soltar en misión no se regala la fuerza (se calcula con lápiz); en libre se ve todo.
+  // Valores: antes de soltar no se regala la fuerza (se estima con F·d = Ec); se revela al impactar (M12.1).
   function readouts(r) {
     const pre = calc(actual || worst());
-    const show = r || (!mission ? pre : null);
+    const show = r || null; // M12.1: la fuerza se revela al impactar (antes, el alumno la estima con F·d = Ec)
     $('#r-e').textContent = fmt(pre.E, 2) + ' J'; $('#r-d').textContent = cm(pre.d) + (actual ? '' : ' *');
     $('#r-m').textContent = fmt(FM(), 0) + ' N';
     $('#r-f').textContent = show ? fmt(show.F, 0) + ' N' : '¿?';
@@ -176,6 +177,7 @@ export default function impacto(el, arg) {
   }
 
   function land(r) {
+    running = false; // ya se puede rearmar la nave aunque sigan las partículas
     const n = broken ? 26 : 8, col = broken ? obj.color : actual.color, cx = sc.ship().cx;
     sc.halt(true); ui.result(true);
     for (let i = 0; i < n; i++) parts.push({ x: cx, y: sc.GROUND, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * (broken ? 3 : 1.5), c: col });

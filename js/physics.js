@@ -70,7 +70,7 @@ export function simulateFall(p, every = 1 / 30) {
 // ── Acto 3: impacto ─────────────────────────────────────────────────────
 // Al chocar, el paquete se frena en una distancia d. El trabajo de la fuerza media lo detiene: F_media · d = Ec.
 // d = deformación propia del paquete (D_PAQUETE) + hundimiento del suelo + compresión de la funda.
-// Con suelo rígido y sin funda d = D_PAQUETE, así que F_máx = Límite G / D_PAQUETE reproduce el criterio del Acto 1.
+// Con suelo rígido y sin funda d = D_PAQUETE, así que F_máx = resistencia / D_PAQUETE reproduce el criterio del Acto 1.
 export const D_PAQUETE = 0.002; // m
 export const fMedia = (E, d) => E / d;
 export const fMax = (limit) => limit / D_PAQUETE;

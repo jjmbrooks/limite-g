@@ -10,7 +10,9 @@ import { execSync } from 'node:child_process';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const SW = path.join(ROOT, 'sw.js');
 const runtime = execSync('git ls-files --cached --others --exclude-standard -- index.html manifest.webmanifest css js assets', { cwd: ROOT, encoding: 'utf8' })
-  .split('\n').filter((f) => f && !/\.(gitkeep|txt|md)$/.test(f) && fs.existsSync(path.join(ROOT, f))).sort();
+  .split('\n').filter((f) => f && !/\.(gitkeep|txt|md)$/.test(f) && fs.existsSync(path.join(ROOT, f)))
+  // M12.1: la música por sección se guarda en caché al sonar por primera vez (ahorro de datos); solo tema.m4a y sfx/ se precargan.
+  .filter((f) => !/^assets\/audio\/(?!tema\.m4a$|sfx\/)[^/]+\.m4a$/.test(f)).sort();
 const want = ['./', ...runtime.filter((f) => f !== 'index.html'), 'index.html'];
 const src = fs.readFileSync(SW, 'utf8');
 const m = src.match(/\/\/ <precache>\n([\s\S]*?)\/\/ <\/precache>/);

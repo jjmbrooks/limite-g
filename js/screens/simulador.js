@@ -25,6 +25,7 @@ export default function simulador(el, arg) {
   let obj = mission ? OBJECTS.find((o) => o.id === mission.obj) : OBJECTS[0];
   let pl = mission ? PLANETS.find((p) => p.id === mission.planet) : PLANETS[2];
   let alive = true, h0 = mission ? 1 : 2, running = false, raf = 0, parts = [], broken = false, stopScene = null, cur = null, landed = false;
+  let pred = null, racha = 0; // M12: predicción (declarada arriba: show() la consulta)
 
   const tabs = `<div class="tabs" role="tablist"><a href="#simulador" role="tab" aria-selected="true" class="on">Sin aire</a>${isDone('m4') ? '<a href="#aire" role="tab">Con aire</a>' : '<span class="tab-off" title="Completa el Acto 1">⊘ Aire</span>'}${isDone('m8') ? '<a href="#impacto" role="tab">Impacto</a>' : '<span class="tab-off" title="Completa el Acto 2">⊘ Impacto</span>'}</div>`;
   const head = mission ? `<div class="g-title">MISIÓN: ${mission.title.toUpperCase()}</div>
@@ -33,12 +34,14 @@ export default function simulador(el, arg) {
     head,
     top: `<div class="g-read">
         <div>Altura<b id="r-h">0 m</b></div><div>Veloc.<b id="r-v">0 m/s</b></div>
-        <div>Tiempo<b id="r-t">0 s</b></div><div>Límite G<b id="r-l">0 J</b></div></div>
+        <div>Tiempo<b id="r-t">0 s</b></div><div>Resistencia<b id="r-l">0 J</b></div></div>
       <div class="bars mini">
         <span>Ep</span><div class="bar ep"><i id="b-ep"></i></div><span id="v-ep">0 J</span>
         <span>Ec</span><div class="bar ec"><i id="b-ec"></i></div><span id="v-ec">0 J</span></div>
       ${sab.has('regla') ? `<label class="g-hnum" for="hnum"><span>Altura (m) <em>· regla borrada por Caos</em></span>
-        <input type="text" inputmode="decimal" id="hnum" class="num" autocomplete="off" placeholder="p. ej. 2.5"></label>` : ''}`,
+        <input type="text" inputmode="decimal" id="hnum" class="num" autocomplete="off" placeholder="p. ej. 2.5"></label>` : ''}
+      ${mission ? '' : `<div class="predict" role="group" aria-label="Tu predicción antes de soltar"><span>¿Predices?</span>
+        <button class="pchip" data-p="ok" aria-pressed="false">Aguanta</button><button class="pchip" data-p="ko" aria-pressed="false">Se rompe</button></div>`}`,
     sheet: `${mission ? `<div class="panel mission"><h2>OBJETIVO</h2><p>${mission.brief}</p>
         <p class="muted">Ventana: <b style="color:var(--yellow)">${fmt(obj.limit * mission.lo, 2)} J – ${fmt(obj.limit * mission.hi, 2)} J</b></p></div>`
         : '<div class="say"><span class="slot-gal"></span><p>GAL-1: "Prueba con un dummy antes de arriesgar el paquete real."</p></div><h2>PAQUETE</h2><div class="row" id="objs"></div><h2 style="margin-top:12px">PLANETA</h2><div class="row" id="pls"></div>'}
@@ -50,7 +53,8 @@ export default function simulador(el, arg) {
   $('.slot-gal')?.replaceWith(artCanvas('retrato-gal', GAL1, { w: 64, cls: 'avatar sm gal', label: 'GAL-1' }));
   const sc = createScene($('.stage'), {
     planet: pl, h0, hMin: 0.2, hMax: H_MAX, hideRuler: sab.has('regla'), fixed: sab.has('regla'),
-    onHeight: (v) => { if (running) return; h0 = v; reset(); }, paint,
+    onHeight: (v) => { if (running) return; h0 = v; reset(); },
+    rearm: () => (running ? false : reset()), paint,
   });
 
   const chips = (box, list, curr, pick) => {
@@ -78,6 +82,23 @@ export default function simulador(el, arg) {
     if (v >= H_MIN && v <= H_MAX) { h0 = v; sc.setHeight(v, { silent: true }); reset(); }
   });
 
+  // M12 (pedagogía): predecir antes de observar. La predicción es opcional y se compara con el resultado.
+  el.querySelectorAll('.pchip').forEach((b) => (b.onclick = () => {
+    if (running) return;
+    pred = pred === b.dataset.p ? null : b.dataset.p; sfx.click();
+    el.querySelectorAll('.pchip').forEach((x) => { x.classList.toggle('on', x.dataset.p === pred); x.setAttribute('aria-pressed', String(x.dataset.p === pred)); });
+    if (!running) show(0); // con predicción elegida se oculta Ep hasta soltar
+  }));
+  // Cálculo visible tras el impacto: une lo que se vio con la fórmula (con los números de este lanzamiento).
+  const calc = (E, v) => `<span class="calc">Ep = m·g·h = ${obj.m} kg × ${pl.g} m/s² × ${fmt(h0, 2)} m = <b>${fmt(E, 2)} J</b><br>
+    Toda la Ep se vuelve Ec: v = √(2·g·h) = <b>${fmt(v, 2)} m/s</b></span>`;
+  function predMsg(broken) {
+    if (!pred) return '<span class="cmp">Tip: antes de soltar, elige «Aguanta» o «Se rompe» y pon a prueba tu intuición.</span>';
+    const ok = (pred === 'ko') === broken, was = pred; racha = ok ? racha + 1 : 0;
+    pred = null; el.querySelectorAll('.pchip').forEach((x) => { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); }); // nueva predicción en cada lanzamiento
+    return `<span class="cmp pred ${ok ? 'ok' : 'ko'}">${ok ? `✓ Predicción correcta${racha > 1 ? ` · racha ${racha}` : ''}` : `✗ Predijiste «${was === 'ok' ? 'aguanta' : 'se rompe'}». Compara Ep con su resistencia (${obj.limit} J).`}</span>`;
+  }
+
   function reset() {
     cancelAnimationFrame(raf); fallStop(); running = false; broken = false; landed = false; parts = [];
     sc.lock(false); sc.halt(false);
@@ -89,7 +110,7 @@ export default function simulador(el, arg) {
     const s = stateAt(obj.m, pl.g, h0, t);
     const pct = (x) => (s.total ? (100 * x) / s.total : 0) + '%';
     $('#b-ep').style.width = pct(s.ep); $('#b-ec').style.width = pct(s.ec);
-    const hide = sab.has('g') && !running && t === 0; // con g borrada no se regala la Ep antes de soltar
+    const hide = (sab.has('g') || (!mission && pred)) && !running && t === 0; // M12.1: con predicción pendiente tampoco // con g borrada no se regala la Ep antes de soltar
     const hideH = sab.has('regla') && !running; // con la regla borrada no se muestra la altura antes de soltar
     $('#v-ep').textContent = hide || hideH ? '¿? J' : fmt(s.ep, 2) + ' J'; $('#v-ec').textContent = fmt(s.ec, 2) + ' J';
     $('#r-h').textContent = hideH ? '¿? m' : fmt(s.h, 2) + ' m'; $('#r-v').textContent = fmt(s.v, 2) + ' m/s';
@@ -113,7 +134,7 @@ export default function simulador(el, arg) {
   function drop() {
     if (running) return;
     if ($('#hnum') && !($('#hnum').value.trim())) { $('#hnum').classList.add('bad'); $('#hnum').focus(); return; }
-    reset(); running = true; sc.lock(true); ui.sheet(false); sfx.launch(); fallStart();
+    const keep = pred; reset(); pred = keep; running = true; sc.lock(true); ui.sheet(false); sfx.launch(); fallStart();
     const T = tFall(pl.g, h0), start = performance.now();
     const loop = (now) => {
       const t = Math.min((now - start) / 1000, T); const s = show(t); fallSpeed(s.v);
@@ -131,14 +152,14 @@ export default function simulador(el, arg) {
   }
   function land() {
     const E = ep(obj.m, pl.g, h0), v = vImpact(pl.g, h0), ratio = E / obj.limit;
-    broken = ratio > 1; landed = true; sc.halt(true);
+    broken = ratio > 1; landed = true; running = false; sc.halt(true);
     const n = broken ? 26 : 8, col = broken ? obj.color : pl.ground, cx = sc.ship().cx;
     for (let i = 0; i < n; i++) parts.push({ x: cx, y: sc.GROUND, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * (broken ? 3 : 1.5), c: col });
     $('#r-v').textContent = fmt(v, 2) + ' m/s';
     ui.result(true);
     if (mission) return missionResult(E, ratio);
     const vd = $('#verdict');
-    if (broken) { sfx.crash(); vd.className = 'verdict ko'; vd.innerHTML = `¡CRASH! ${fmt(E, 1)} J > ${obj.limit} J<br><span class="cmp">Dr. Caos: "¿Lo ves? Todo lo que cae, se destruye."</span>`; return; }
+    if (broken) { sfx.crash(); vd.className = 'verdict ko'; vd.innerHTML = `¡CRASH! ${fmt(E, 1)} J > ${obj.limit} J<br>${predMsg(true)}${calc(E, v)}<span class="cmp">Dr. Caos: "¿Lo ves? Todo lo que cae, se destruye."</span>`; return; }
     sfx.thud(); setTimeout(sfx.win, 250);
     const key = obj.id + '@' + pl.id, combos = { ...get().combos };
     let pts = 0, msg = '';
@@ -147,11 +168,11 @@ export default function simulador(el, arg) {
     else combos[key] = combos[key] || 1;
     set({ combos }); if (pts) addScore(pts);
     vd.className = 'verdict ok';
-    vd.innerHTML = `¡ENTREGADO! ${fmt(E, 1)} J ≤ ${obj.limit} J<br><span class="cmp" style="color:var(--yellow)">${msg || 'Usó el ' + Math.round(ratio * 100) + '% de su Límite G'}</span>`;
+    vd.innerHTML = `¡ENTREGADO! ${fmt(E, 1)} J ≤ ${obj.limit} J<br><span class="cmp" style="color:var(--yellow)">${msg || 'Usó el ' + Math.round(ratio * 100) + '% de su resistencia'}</span>${predMsg(false)}${calc(E, v)}`;
   }
 
   function missionResult(E, ratio) {
-    const vd = $('#verdict'), pctTxt = Math.round(ratio * 100) + ' % del Límite G';
+    const v = vImpact(pl.g, h0), vd = $('#verdict'), pctTxt = Math.round(ratio * 100) + ' % de la resistencia';
     const ok = ratio >= mission.lo && ratio <= mission.hi;
     if (!ok) {
       broken ? sfx.crash() : sfx.thud();
@@ -159,6 +180,7 @@ export default function simulador(el, arg) {
       vd.innerHTML = broken
         ? `¡CRASH! ${fmt(E, 2)} J > ${obj.limit} J<br><span class="cmp">Dr. Caos: "Confeti interplanetario. ¡Ja!"</span>`
         : `MUY BAJO: ${fmt(E, 2)} J (${pctTxt})<br><span class="cmp">GAL-1: "Llegó entero, pero gastamos combustible de más. Sube un poco."</span>`;
+      vd.innerHTML += calc(E, v);
       return;
     }
     sfx.thud(); setTimeout(sfx.win, 250);
@@ -166,7 +188,7 @@ export default function simulador(el, arg) {
     if (stars > prev) set({ missions: { ...get().missions, [mission.id]: stars } });
     if (!prev) addScore(5);
     vd.className = 'verdict ok';
-    vd.innerHTML = `¡ENTREGA PERFECTA! ${fmt(E, 2)} J<br><span class="cmp" style="color:var(--yellow)">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} · ${pctTxt}${prev ? '' : ' · +5 ★'}</span>`;
+    vd.innerHTML = `¡ENTREGA PERFECTA! ${fmt(E, 2)} J<br><span class="cmp" style="color:var(--yellow)">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} · ${pctTxt}${prev ? '' : ' · +5 ★'}</span>${calc(E, v)}`;
     const after = () => {
       $('#after').innerHTML = `<button class="btn" data-map>▶ Volver al mapa</button>${stars < 3 ? '<button class="btn ghost" data-retry>↻ Reintentar por 3 ★ (≥ 95 %)</button>' : ''}`;
       $('[data-map]').onclick = () => go('historia');

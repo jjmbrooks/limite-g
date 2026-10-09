@@ -63,7 +63,8 @@ export default function aire(el, arg) {
   $('.slot-gal')?.replaceWith(artCanvas('retrato-gal', GAL1, { w: 64, cls: 'avatar sm gal', label: 'GAL-1' }));
   const sc = createScene($('.stage'), {
     planet: pl, h0, hMin: 5, hMax: 1000, fixed: !!mission,
-    onHeight: (v) => { if (running) return; h0 = v; reset(); }, paint: drawStage,
+    onHeight: (v) => { if (running) return; h0 = v; reset(); },
+    rearm: () => (running ? false : reset()), paint: drawStage,
   });
 
   const rho = () => pl.air || 0;
@@ -191,7 +192,7 @@ export default function aire(el, arg) {
 
   function land() {
     const s = fall.s, E = ec(obj.m, s.v), ratio = E / obj.limit;
-    broken = ratio > 1; running = true; sc.halt(true); ui.result(true);
+    broken = ratio > 1; running = false; sc.halt(true); ui.result(true);
     $('#drop').textContent = '▼ SOLTAR'; $('#drop').classList.remove('teal');
     const n = broken ? 26 : 8, col = broken ? obj.color : pl.ground;
     const cx = sc.ship().cx;

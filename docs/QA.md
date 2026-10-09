@@ -24,11 +24,11 @@ o en las herramientas de desarrollador del navegador (modo dispositivo). Marca c
 ## 4. Física coherente
 - [ ] Simulador: Ep + Ec se mantiene constante durante la caída (las barras suman 100 %).
 - [ ] Con h = 10 m en la Tierra: t ≈ 1.43 s y v ≈ 14.01 m/s; en la Luna: t ≈ 3.51 s y v ≈ 5.69 m/s.
-- [ ] El veredicto coincide con Ep = m·g·h comparada con el Límite G del paquete.
+- [ ] El veredicto coincide con Ep = m·g·h comparada con la resistencia del paquete.
 - [ ] Las preguntas de cálculo del examen dan la respuesta correcta con las fórmulas del Códice.
 - [ ] Las misiones de altura exacta se pueden resolver con lápiz y papel (h = E / (m·g)).
 - [ ] Acto 2 (`#aire`): Ep + Ec + Aire suman la Ep inicial; la velocidad se aplana en la vt mostrada (celular en la Tierra ≈ 17.9 m/s).
-- [ ] Acto 3 (`#impacto`): F = Ec / d; en concreto y sin funda el veredicto coincide con el del Acto 1 (Ep ≤ Límite G); más grosor o suelo más blando bajan F, pero la funda suma masa (Ec sube).
+- [ ] Acto 3 (`#impacto`): F = Ec / d; en concreto y sin funda el veredicto coincide con el del Acto 1 (Ep ≤ resistencia); más grosor o suelo más blando bajan F, pero la funda suma masa (Ec sube).
 - [ ] Acto 2: abrir el paracaídas (automático o con ☂ ABRIR) baja la curva de v(t) a la nueva vt; la línea punteada «sin aire» llega a √(2gh).
 
 ## 5. Textos en español

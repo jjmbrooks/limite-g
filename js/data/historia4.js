@@ -15,7 +15,7 @@ export const MISSIONS_FINAL = [
   {
     id: 'f1', act: 4, mode: 'vacio', title: 'Cubierta sin aire', planet: 'entropia', obj: 'nucleo', lo: 0.9, hi: 1,
     sabotage: ['regla', 'g'], requires: ['m12'],
-    brief: 'Caos borró la regla y la g. Entrega el Núcleo (2 kg, 50 J) en la cubierta con 90 %–100 % de su Límite G.',
+    brief: 'Caos borró la regla y la g. Entrega el Núcleo (2 kg, 50 J) en la cubierta con 90 %–100 % de su resistencia.',
     pre: [
       { who: 'caos', text: 'Borré todo otra vez. Sin regla, sin g. ¿Qué harás ahora, Comandante?' },
       { who: 'nova', text: 'Lo mismo que en el Acto 1: h = E / (m·g). La g de la estación es la de Júpiter.' },

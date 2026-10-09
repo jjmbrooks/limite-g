@@ -89,7 +89,7 @@ export default function examen(el, arg) {
     if (locked) return; locked = true; stopTimers();
     const q = qs[k], ok = i === q.correcta;
     if (ok) { hits++; sfx.win(); } else sfx.crash();
-    el.querySelectorAll('.opt').forEach((b, j) => { b.disabled = true; if (j === q.correcta) b.classList.add('right'); else if (j === i) b.classList.add('wrong'); });
+    el.querySelectorAll('.opt').forEach((b, j) => { b.disabled = true; if (j === q.correcta) { b.classList.add('right'); b.insertAdjacentHTML('afterbegin', '<span class="mark" aria-label="Correcta">✓ </span>'); } else if (j === i) { b.classList.add('wrong'); b.insertAdjacentHTML('afterbegin', '<span class="mark" aria-label="Tu respuesta, incorrecta">✗ </span>'); } });
     $('#fb').innerHTML = `<div class="verdict ${ok ? 'ok' : 'ko'}">${ok ? '¡CORRECTO!' : i === -1 ? '¡TIEMPO!' : 'INCORRECTO'}</div>
       <div class="panel dialog"><span class="slot" data-who="gal"></span><div><h2 style="color:var(--yellow)">GAL-1</h2><p>${q.explica}</p></div></div>
       <button class="btn" data-next>${k < N - 1 ? '▶ Siguiente pregunta' : '★ Ver resultado'}</button>`;

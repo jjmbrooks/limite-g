@@ -5,7 +5,7 @@
 export const INTRO = [
   { who: 'gal', text: 'Año 2187. Órbita baja de la Luna. Sistemas de la nave-correo Parábola… en línea.' },
   { who: 'gal', text: 'Bienvenida, cadete Nova. La Red Postal Interplanetaria no aterriza: entregamos por caída para ahorrar combustible.' },
-  { who: 'nova', text: 'Lo sé, GAL. Cada paquete tiene su Límite G: la energía máxima que aguanta al chocar. Si la rebaso, se rompe.' },
+  { who: 'nova', text: 'Lo sé, GAL. Cada paquete tiene su resistencia: la energía máxima que aguanta al chocar. Si la rebaso, se rompe.' },
   { who: 'gal', text: 'Correcto. Comunicadores, vacunas, cristales de energía, huevos de criadero, robots… las colonias dependen de nosotras.' },
   { who: 'caos', text: 'Qué conmovedor. Soy el Dr. Caos, de Transportes Caos. Si sus entregas fallan, el Consejo Solar les quitará la licencia… y todas las rutas serán mías.' },
   { who: 'caos', text: 'Ya borré la memoria de tu IA y alteré sus mapas. La entropía siempre gana: todo lo que cae, se destruye.' },
@@ -14,12 +14,12 @@ export const INTRO = [
   { who: 'gal', text: 'Primera ruta: la Luna. Sin aire, solo gravedad. Abriendo el mapa de misiones.' },
 ];
 
-// Misiones de altura exacta: la energía de impacto debe quedar entre lo y hi (fracción del Límite G).
+// Misiones de altura exacta: la energía de impacto debe quedar entre lo y hi (fracción de la resistencia).
 // sabotage: 'regla' = Caos borró la regla (se escribe la altura); 'g' = Caos borró el dato de g.
 export const MISSIONS = [
   {
     id: 'm1', title: 'Primera entrega', planet: 'luna', obj: 'cel', lo: 0.8, hi: 1, sabotage: [], requires: [],
-    brief: 'Entrega el comunicador en la colonia Tranquilidad usando entre el 80 % y el 100 % de su Límite G.',
+    brief: 'Entrega el comunicador en la colonia Tranquilidad usando entre el 80 % y el 100 % de su resistencia.',
     pre: [
       { who: 'gal', text: 'La colonia Tranquilidad necesita un comunicador. Aguanta 3 J. Si lo soltamos muy bajo, perdemos tiempo y combustible.' },
       { who: 'nova', text: 'Y si lo soltamos muy alto, llega hecho pedazos. Busco la altura donde Ep quede entre 2.4 J y 3 J.' },
@@ -28,7 +28,7 @@ export const MISSIONS = [
   },
   {
     id: 'm2', title: 'Vacunas para Olympus', planet: 'marte', obj: 'vacuna', lo: 0.85, hi: 1, sabotage: ['regla'], requires: ['m1'],
-    brief: 'Caos borró la regla de altura. Calcula y escribe la altura para entregar la vacuna con 85 %–100 % de su Límite G.',
+    brief: 'Caos borró la regla de altura. Calcula y escribe la altura para entregar la vacuna con 85 %–100 % de su resistencia.',
     pre: [
       { who: 'caos', text: '¿Buscabas tu regla de altura? Ups. La entropía se la comió.' },
       { who: 'gal', text: 'Sin regla no podemos ajustar a ojo. Tendrás que calcular la altura y escribirla.' },
@@ -38,7 +38,7 @@ export const MISSIONS = [
   },
   {
     id: 'm3', title: 'El huevo más frágil', planet: 'tierra', obj: 'huevo', lo: 0.9, hi: 1, sabotage: ['regla'], requires: ['examen'],
-    brief: 'Simulación de la Tierra sin aire. El huevo aguanta solo 0.3 J: entrégalo con 90 %–100 % de su límite.',
+    brief: 'Simulación de la Tierra sin aire. El huevo aguanta solo 0.3 J: entrégalo con 90 %–100 % de su resistencia.',
     pre: [
       { who: 'gal', text: 'Prueba de piloto: un huevo de criadero en la Tierra, en modo ideal sin aire. Solo aguanta 0.3 J.' },
       { who: 'caos', text: 'Un huevo, con g = 9.81. Ve preparando la sartén.' },
@@ -47,7 +47,7 @@ export const MISSIONS = [
   },
   {
     id: 'm4', title: 'Sabotaje en Júpiter', planet: 'jupiter', obj: 'robot', lo: 0.9, hi: 1, sabotage: ['regla', 'g'], requires: ['m3'],
-    brief: 'Caos borró la regla y el dato de g. Usa lo que recuperaste del Códice para entregar el robot con 90 %–100 % de su límite.',
+    brief: 'Caos borró la regla y el dato de g. Usa lo que recuperaste del Códice para entregar el robot con 90 %–100 % de su resistencia.',
     pre: [
       { who: 'caos', text: 'Borré la gravedad de tu IA. Sin g no hay Ep, y sin Ep… ¡boom!' },
       { who: 'gal', text: 'Es cierto: el dato de g de Júpiter no aparece. Pero estaba en el Códice.' },
@@ -71,5 +71,5 @@ export const MAP_ACT1 = [
   { id: 'm4', type: 'mision', requires: ['m3'] },
 ];
 
-// Estrellas de una entrega según qué tan cerca quedó del límite (ratio = E / Límite G).
+// Estrellas de una entrega según qué tan cerca quedó del límite (ratio = E / resistencia).
 export const starsFor = (ratio) => (ratio > 1 ? 0 : ratio >= 0.95 ? 3 : ratio >= 0.9 ? 2 : 1);

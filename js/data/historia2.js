@@ -1,7 +1,7 @@
 // Límite G — escrito por Hark para Jhonatan J. Martínez Brooks (MIT)
 // Guion del Acto 2 (con aire): intro, misiones con paracaídas y mapa. Textos bajo CC BY 4.0 (ver docs/historia.md).
 // Misión de aire: h0 fijo (altura de vuelo de la Parábola); el jugador elige paracaídas y cuándo abrirlo.
-// Éxito: Ec al tocar el suelo ≤ Límite G y tiempo ≤ tMax. Estrellas por tiempo: ≤ t3 → 3, ≤ t2 → 2, si no 1.
+// Éxito: Ec al tocar el suelo ≤ resistencia y tiempo ≤ tMax. Estrellas por tiempo: ≤ t3 → 3, ≤ t2 → 2, si no 1.
 // sabotage: 'rho' = Caos borró la densidad del aire · 'tormenta' = sin altímetro automático (se abre a mano).
 
 export const INTRO_ACT2 = [

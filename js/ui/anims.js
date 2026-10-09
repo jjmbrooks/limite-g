@@ -76,7 +76,7 @@ export const ANIMS = {
       label(g, String(p.g), x, GROUND - 14 > y + 10 ? GROUND - 13 : 2, C.dim);
     });
   },
-  // Línea de altura segura: la barra de Ec llega justo al Límite G.
+  // Línea de altura segura: la barra de Ec llega justo a la resistencia.
   limite(g, t) {
     base(g);
     const p = loop(t, 2.4), fall = Math.min(1, (p * 1.4) ** 2), y = 14 + Math.round(fall * 42);

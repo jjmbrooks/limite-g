@@ -68,5 +68,5 @@ export const PREGUNTAS_ACT3 = [
     explica: 'Doblar las rodillas alarga la distancia de frenado del cuerpo: la misma energía se quita con menos fuerza.' },
   { id: 'k3-limite', tipo: 'concepto', q: 'Un frasco aguanta 1 J sobre concreto, donde se frena en 2 mm. ¿Cuál es su fuerza máxima?',
     opciones: ['500 N', '0.002 N', '2 N', '1 000 N'], correcta: 0,
-    explica: 'F máx = Límite G / d = 1 J / 0.002 m = 500 N.' },
+    explica: 'F máx = resistencia / d = 1 J / 0.002 m = 500 N.' },
 ];

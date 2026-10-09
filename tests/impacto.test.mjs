@@ -15,7 +15,7 @@ test('F media = Ec / d (y F·d devuelve la energía)', () => {
   for (const d of [0.002, 0.01, 0.05]) near(fMedia(10, d) * d, 10, 1e-12);
 });
 
-test('coherencia con el Acto 1: en concreto y sin funda, F ≤ F máx ⇔ Ep ≤ Límite G', () => {
+test('coherencia con el Acto 1: en concreto y sin funda, F ≤ F máx ⇔ Ep ≤ resistencia', () => {
   const concreto = SUELOS.find((s) => s.d === 0);
   for (const o of OBJECTS) for (const p of PLANETS.filter((q) => !q.air)) for (const h of [0.5, 1, 2, 5, 10, 40]) {
     const r = impact({ m: o.m, g: p.g, h, side: sideOf(o), soilD: concreto.d });

@@ -19,7 +19,16 @@ export async function compartirTarjeta() {
 }
 
 // Aviso de celebración: insignia con destellos y botón Compartir.
-export function celebrarLogro(html) {
+// M12.1: los logros salen de uno en uno (cola) para no apilar botones «Compartir» en la zona del pulgar.
+const cola = [];
+let activo = false;
+export function celebrarLogro(html) { cola.push(html); if (!activo) siguiente(); }
+function siguiente() {
+  const html = cola.shift(); if (!html) { activo = false; return; }
+  activo = true; const t = mostrar(html);
+  new MutationObserver((_, o) => { if (!t.isConnected) { o.disconnect(); setTimeout(siguiente, 250); } }).observe(t.parentNode, { childList: true });
+}
+function mostrar(html) {
   const t = toast(`<span class="toast-row"><span>${html}</span><button class="btn teal mini" data-share-logro>⇪ Compartir</button></span>`, 7000, { interactive: true, cls: 'logro-new' });
   t.querySelector('[data-share-logro]').onclick = () => { compartirTarjeta(); t.remove(); };
   return t;

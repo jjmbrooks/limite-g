@@ -48,9 +48,9 @@ export const PREGUNTAS_ACT1 = [
   } },
   { id: 'c-hsafe', tipo: 'calculo', gen(rnd) {
     const o = pick(rnd, OBJECTS), p = pick(rnd, ACT1), h = o.limit / (o.m * p.g);
-    return { q: `${o.name}: m = ${o.m} kg y Límite G = ${o.limit} J. ¿Cuál es la altura máxima segura en ${p.name} (g = ${p.g} m/s²)?`,
+    return { q: `${o.name}: m = ${o.m} kg y resistencia = ${o.limit} J. ¿Cuál es la altura máxima segura en ${p.name} (g = ${p.g} m/s²)?`,
       ...numeric(h, [o.limit * o.m * p.g, o.limit / o.m, o.limit / p.g], 'm'),
-      explica: `Ep = Límite → m·g·h = ${o.limit} → h = ${o.limit} / (${o.m} × ${p.g}) = ${n(h, 'm')}.` };
+      explica: `Ep = resistencia → m·g·h = ${o.limit} → h = ${o.limit} / (${o.m} × ${p.g}) = ${n(h, 'm')}.` };
   } },
   { id: 'c-sobrevive', tipo: 'calculo', gen(rnd) {
     const o = pick(rnd, OBJECTS), p = pick(rnd, ACT1), hs = o.limit / (o.m * p.g);
@@ -80,7 +80,7 @@ export const PREGUNTAS_ACT1 = [
       explica: `Ep = m·g·h; con m y h iguales, la razón es ${a.g} / ${b.g} = ${r2(a.g / b.g)}.` };
   } },
   { id: 'k-masa', tipo: 'concepto', q: 'Desde 10 m en la Luna sueltas a la vez un robot (5 kg) y un huevo (0.06 kg). ¿Cuál llega primero?',
-    opciones: ['Llegan al mismo tiempo', 'El robot, porque pesa más', 'El huevo, porque es más ligero', 'Depende del Límite G'], correcta: 0,
+    opciones: ['Llegan al mismo tiempo', 'El robot, porque pesa más', 'El huevo, porque es más ligero', 'Depende de la resistencia'], correcta: 0,
     explica: 'Sin aire, t = √(2h/g) no depende de la masa. Galileo lo mostró hace siglos.' },
   { id: 'k-conserva', tipo: 'concepto', q: 'Mientras un paquete cae sin aire, su energía mecánica (Ep + Ec)…',
     opciones: ['Se mantiene constante', 'Aumenta', 'Disminuye', 'Se vuelve cero'], correcta: 0,

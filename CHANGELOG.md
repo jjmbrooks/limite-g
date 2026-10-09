@@ -7,6 +7,10 @@ Cada entrada escrita por Hark termina con "— firmado: Hark"; las de autores hu
 ## [Unreleased]
 
 ### Added
+- M12: menú rediseñado (CONTINUAR con el siguiente paso, ruta de aprendizaje, mosaico con estado), predicción antes de soltar y cálculo tras el impacto en el simulador sin aire, análisis en docs/analisis-ux-pedagogia.md. — firmado: Hark
+
+### Fixed
+- Tras soltar se puede rearmar la nave arrastrando; la segunda caída se encuadra desde la nave; la escena ya no se desplaza por dentro; el fondo ya no repite franjas al subir. — firmado: Hark
 - Placeholders de cinemáticas: sin MP4 se muestra su primer cuadro (assets/video/*.webp); prompts de Suno en docs/audio/prompts-suno.md. — firmado: Hark
 - Pantalla de créditos con «Victory Theme»; jingles CC0 de Kenney (victoria, logro, paquete roto); primeros y últimos cuadros de los videos. — firmado: Hark
 - Música por sección: «Galactic Quest» (tema, menú y logros) y «Starship Interior» (bitácora: historia y Códice), con fundido y respaldo chiptune. — firmado: Hark
@@ -40,3 +44,18 @@ Cada entrada escrita por Hark termina con "— firmado: Hark"; las de autores hu
 ### Added
 - M0–M2: plan, historia, esqueleto de pantallas, guardado local, audio chiptune y simulador del Acto 1 (sin aire). — firmado: Jhonatan J. Martínez Brooks
 - Licencia MIT, mood board y workflow de publicación `publicar.yml`. — firmado: Jhonatan J. Martínez Brooks
+
+## M12.1 — Pasada de diseño Impeccable (2026-10-09)
+- DESIGN.md: sistema visual documentado (paleta con significado, tipografía, ventanas SNES, componente escena).
+- Avisos de logro en cola (uno a la vez) y elevados sobre SOLTAR en los simuladores.
+- Examen: vuelven los colores de correcta/incorrecta (especificidad) y se añaden ✓/✗.
+- Íconos pixel 12×12 (js/gfx/iconos.js) en lugar de glifos Unicode en el menú y Logros; candado para lo bloqueado.
+- Contraste: texto secundario #b9c2e6 dentro de ventanas; bloqueados legibles (sin opacity sobre el texto).
+- Objetivos táctiles de 44 px en pestañas y predicción.
+- Predicción honesta: con predicción elegida Ep se oculta hasta soltar; en Impacto la fuerza se revela al impactar.
+- Ahorro de datos: la música por sección ya no se precarga (≈10 MB menos al instalar); se guarda en caché al sonar.
+- Sin easing de rebote ni halo de brillo; menú sin rótulos sobre títulos; selección/scrollbar/caret con la paleta.
+- Arreglo: la vista previa oculta de Logros ya no aparece como imagen rota.
+
+## M12.2 — «Resistencia» en lugar de «Límite G» como unidad (2026-10-09)
+- El nombre de la app se conserva. Dentro del juego, la energía máxima que aguanta un paquete se llama ahora **resistencia** (en J): lecturas, Códice, historia, misiones, examen y documentación.

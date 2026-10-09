@@ -26,7 +26,7 @@ export const PREGUNTAS_ACT2 = [
     const o = pick(rnd, OBJECTS), vt = pick(rnd, [2, 3, 4, 5, 6, 8, 10, 15, 20]), E = 0.5 * o.m * vt * vt, ok = E <= o.limit;
     return { q: `${o.name} (m = ${o.m} kg, aguanta ${o.limit} J) toca el suelo a su velocidad terminal con paracaídas: ${vt} m/s. ¿Con cuánta energía llega?`,
       ...numeric(E, [o.m * vt * vt, 0.5 * o.m * vt, o.m * 9.81 * vt], 'J'),
-      explica: `Ec = ½·m·v² = 0.5 × ${o.m} × ${vt}² = ${n(E, 'J')}. ${ok ? 'Es menor que su Límite G: sobrevive.' : 'Supera su Límite G: hace falta un paracaídas más grande.'}` };
+      explica: `Ec = ½·m·v² = 0.5 × ${o.m} × ${vt}² = ${n(E, 'J')}. ${ok ? 'Es menor que su resistencia: sobrevive.' : 'Supera su resistencia: hace falta un paracaídas más grande.'}` };
   } },
   { id: 'c2-perdida', tipo: 'calculo', gen(rnd) {
     const o = pick(rnd, [OBJ('cel'), OBJ('cristal'), OBJ('robot')]), p = pick(rnd, AIR), h = 50 + 25 * Math.floor(rnd() * 9);

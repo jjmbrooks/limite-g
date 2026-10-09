@@ -45,10 +45,10 @@ export const CODICE_ACT1 = [
   {
     id: 'limite', title: 'Altura segura', speaker: 'caos', anim: 'limite',
     quote: 'Ja. Calcula mal un decimal y tu paquete será confeti. La entropía siempre gana.',
-    formula: 'h segura = Límite G / (m · g)',
-    text: 'El <b>Límite G</b> es la energía máxima que aguanta un paquete. Si igualas Ep = Límite G y despejas h, obtienes la altura máxima de entrega. La entrega perfecta usa entre el 80 % y el 100 % del límite: rápida, pero sin romper nada.',
-    example: { q: 'Un celular (0.2 kg, Límite G = 3 J) se entrega en Marte (g = 3.71 m/s²). ¿Desde qué altura máxima?',
-      steps: ['h = Límite / (m · g)', 'h = 3 J / (0.2 kg × 3.71 m/s²) = 3 / 0.742', 'h ≈ 4.04 m (más alto, se rompe)'] },
+    formula: 'h segura = resistencia / (m · g)',
+    text: 'La <b>resistencia</b> es la energía máxima que aguanta un paquete. Si igualas Ep = resistencia y despejas h, obtienes la altura máxima de entrega. La entrega perfecta usa entre el 80 % y el 100 % del límite: rápida, pero sin romper nada.',
+    example: { q: 'Un celular (0.2 kg, resistencia = 3 J) se entrega en Marte (g = 3.71 m/s²). ¿Desde qué altura máxima?',
+      steps: ['h = resistencia / (m · g)', 'h = 3 J / (0.2 kg × 3.71 m/s²) = 3 / 0.742', 'h ≈ 4.04 m (más alto, se rompe)'] },
   },
 ];
 
@@ -126,7 +126,7 @@ export const CODICE_ACT3 = [
     id: 'suelos', title: 'Suelos', speaker: 'gal', anim: 'suelos',
     quote: 'Cada suelo se hunde distinto. Ese hundimiento se suma a la distancia de frenado.',
     formula: 'concreto 0 · pasto 1 · arena 3 · espuma 8 cm',
-    text: 'Todo paquete se deforma un poquito (unos <b>2 mm</b>): por eso su Límite G del Acto 1 equivale a una <b>fuerza máxima F máx = Límite G / 0.002 m</b>. Un suelo blando añade su hundimiento: d = 0.2 cm + suelo + funda. El concreto no se hunde nada; un colchón de espuma, varios centímetros.',
+    text: 'Todo paquete se deforma un poquito (unos <b>2 mm</b>): por eso su resistencia del Acto 1 equivale a una <b>fuerza máxima F máx = resistencia / 0.002 m</b>. Un suelo blando añade su hundimiento: d = 0.2 cm + suelo + funda. El concreto no se hunde nada; un colchón de espuma, varios centímetros.',
     example: { q: 'Un huevo (F máx = 0.3 J / 0.002 m = 150 N) llega con 1.5 J. ¿Sobrevive en pasto?',
       steps: ['d = 0.002 + 0.01 = 0.012 m', 'F = 1.5 J / 0.012 m = 125 N', '125 N < 150 N → sobrevive (en concreto: 750 N, se rompe)'] },
   },

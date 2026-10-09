@@ -7,7 +7,7 @@ const done = (s, id) => (s.missions?.[id] || 0) > 0;
 const passed = (s, k) => !!s[k]?.passed;
 
 export const LOGROS = [
-  { id: 'primera', icon: '▼', title: 'Primera entrega', desc: 'Completa tu primera misión.', test: (s) => Object.values(s.missions || {}).some((x) => x > 0) },
+  { id: 'primera', icon: '✉', title: 'Primera entrega', desc: 'Completa tu primera misión.', test: (s) => Object.values(s.missions || {}).some((x) => x > 0) },
   { id: 'acto1', icon: '1', title: 'Sin aire, sin miedo', desc: 'Completa el Acto 1 (Luna, Marte, Tierra ideal y Júpiter).', test: (s) => done(s, 'm4') },
   { id: 'acto2', icon: '☂', title: 'Dueña del aire', desc: 'Completa el Acto 2 (Tierra, Venus y Titán).', test: (s) => done(s, 'm8') },
   { id: 'acto3', icon: '■', title: 'Impacto perfecto', desc: 'Completa el Acto 3 (Europa e Ío).', test: (s) => done(s, 'm12') },

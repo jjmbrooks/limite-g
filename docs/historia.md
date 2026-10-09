@@ -1,7 +1,7 @@
 # Límite G — Historia (v1, 2026-10-07)
 
 ## Premisa
-Año 2187. Las colonias del Sistema Solar dependen de la Red Postal Interplanetaria (RPI). Para ahorrar combustible, la RPI no aterriza: hace "entregas por caída" desde órbita baja. Cada paquete tiene su **Límite G**: la energía máxima de impacto que aguanta antes de romperse.
+Año 2187. Las colonias del Sistema Solar dependen de la Red Postal Interplanetaria (RPI). Para ahorrar combustible, la RPI no aterriza: hace "entregas por caída" desde órbita baja. Cada paquete tiene su **resistencia**: la energía máxima de impacto que aguanta antes de romperse.
 
 ## Protagonista: Nova
 17 años, cadete mensajera recién egresada, a bordo de la nave-correo *Parábola*. Copiloto: GAL-1 (Galileo), IA de navegación.

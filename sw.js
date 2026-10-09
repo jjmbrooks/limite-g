@@ -3,20 +3,12 @@
 // (funciona en / y bajo /limite-g/ de GitHub Pages) y responde primero desde la caché.
 // AL PUBLICAR CAMBIOS: sube VERSION (p. ej. 'm10-2') para que los teléfonos descarguen la versión nueva.
 // La lista PRECACHE la verifica scripts/qa.sh; `node scripts/qa/sw-precache.mjs --fix` la regenera.
-const VERSION = 'm11-5';
+const VERSION = 'm12-1';
 const CACHE = 'limiteg-' + VERSION;
 
 // <precache>
 const PRECACHE = [
   './',
-  'assets/audio/acto1.m4a',
-  'assets/audio/acto2.m4a',
-  'assets/audio/acto3.m4a',
-  'assets/audio/bitacora.m4a',
-  'assets/audio/caos.m4a',
-  'assets/audio/creditos.m4a',
-  'assets/audio/examen.m4a',
-  'assets/audio/final.m4a',
   'assets/audio/sfx/logro.m4a',
   'assets/audio/sfx/rompe.m4a',
   'assets/audio/sfx/victoria.m4a',
@@ -67,6 +59,7 @@ const PRECACHE = [
   'js/data/preguntas2.js',
   'js/data/preguntas3.js',
   'js/data/videos.js',
+  'js/gfx/iconos.js',
   'js/gfx/imagenes.js',
   'js/gfx/palette.js',
   'js/gfx/pixel.js',
@@ -123,6 +116,18 @@ self.addEventListener('fetch', (e) => {
   // Navegación (cualquier #ruta): siempre index.html desde la caché.
   if (req.mode === 'navigate') {
     e.respondWith(caches.match('./', { cacheName: CACHE }).then((hit) => hit || fetch(req)).catch(() => caches.match('./')));
+    return;
+  }
+  // M12.1: música de sección bajo demanda. Se sirve de la caché si ya sonó; si no, se pide a la red
+  // y se guarda completa (sin Range) para la próxima vez y para jugar sin conexión.
+  if (/\/assets\/audio\/[^/]+\.m4a$/.test(url.pathname)) {
+    e.respondWith(caches.open(CACHE).then((c) => c.match(url.pathname.replace(/^.*\/assets\//, 'assets/'), { ignoreSearch: true })
+      .then((hit) => hit || c.match(req, { ignoreSearch: true }))
+      .then((hit) => {
+        if (hit) return hit;
+        e.waitUntil(fetch(url.href).then((r) => (r.ok && r.status === 200 ? c.put(url.href, r) : null)).catch(() => {}));
+        return fetch(req);
+      })));
     return;
   }
   e.respondWith(caches.match(req, { cacheName: CACHE, ignoreSearch: true }).then((hit) => hit || fetch(req)));
