@@ -22,12 +22,14 @@ Referencias: `docs/historia.md` (historia) y `docs/mood-pixel.jpg` (estilo visua
 - [x] M9 Final en Estación Entropía + logros
 - [x] M10 Logros compartibles como imagen (WhatsApp), PWA offline y pulido
 - [x] M11 Remasterización 16-bit: arte PNG estilo SNES fiel al mood board, interfaz con ventanas tipo SNES, simuladores a pantalla completa (nave infinita con paralaje, altura arrastrable, SOLTAR superpuesto), compartir logros desde su celebración y cinemáticas opcionales (Grok Imagine)
+- [x] M11.1 Cámara vertical continua en la escena de los simuladores (zoom suave 0.2–2000 m, paralaje vertical, la cámara sigue al paquete hasta el suelo)
 - [ ] Futuro: autenticación y puntajes en Firebase
 
 ## Pendientes después de M11 (ideas, no bloquean)
 - Generar los 3 videos en Grok Imagine con `docs/videos/*.png` + `docs/videos/prompts.md` y subirlos a `assets/video/` (el código ya los detecta).
 - Los íconos de planeta de chips y mapa siguen siendo generados por código (`planetCanvas`); podrían pasar a PNG 16-bit.
 - Paracaídas, grietas y partículas siguen en matriz (se ven bien escalados ×2); el Códice usa sus mini-animaciones de M4.
+- M11.1: los cortes de capas de cada fondo (`CAPAS` en `escena.js`) se midieron a ojo; si se cambia un PNG de `assets/fondos/`, revisa sus filas `sky`/`gnd`. Las nubes son rectángulos sencillos: podrían pasar a sprite PNG.
 - Probar el arrastre de altura en teléfonos reales (iOS Safari y Android Chrome) y ajustar la sensibilidad (`escena.js`: 60 % del alto = ×10).
 
 ## Pendientes después de M10 (ideas, no bloquean)
@@ -48,3 +50,4 @@ Referencias: `docs/historia.md` (historia) y `docs/mood-pixel.jpg` (estilo visua
 - 2026-10-07 (Hark): M5 listo. Banco de 20 preguntas (`js/data/preguntas.js`: 9 de cálculo generadas al azar con distractores de errores típicos + 11 de concepto). Examen de 8 (4+4), aprobar con 6 → Piloto (+5 ★). Interferencias de Caos: texto con glitch (botón «Limpiar señal») y reloj de 25 s. Récord e intentos en localStorage. Pruebas validan 300 variantes por pregunta.
 - 2026-10-07 (Hark): M6 listo. Prólogo y diálogos con máquina de escribir (tocar = completar/avanzar, «Omitir», Esc; instantáneo con movimiento reducido). Mapa del Acto 1: Códice → m1 Luna → m2 Marte (regla borrada: se escribe la altura) → Examen → m3 Tierra ideal → m4 Júpiter (regla y g borradas) → Acto 2 (próximamente). Misiones de altura exacta en `#simulador/mX` con ventana de energía, 1–3 ★ y +5 ★ la primera vez. Audio bloqueado hasta la primera interacción.
 - 2026-10-07: M0–M2 listos (simulador funcional con sprites dibujados por código; se reemplazan en M3).
+- 2026-10-08 (Hark): M11.1 cámara vertical (retroalimentación del docente: al soltar se congelaba el fondo y las texturas se rompían; la escala saltaba con `nice()`). `js/ui/escena.js`: mundo con suelo en h = 0 y cámara (cam = altura en el borde inferior, span = metros visibles = 3.2·h^0.6, continuo); cerca del suelo la nave sube en pantalla y desde ~5 m queda a 40 % desde arriba y baja el mundo. Paralaje vertical por capas cortadas en filas sin objetos (cielo 25 %, lejanas 60 %, suelo 100 %; los huecos se rellenan repitiendo filas del horizonte/llanura), cielo degradado con tramado, nubes y estrellas a gran altura; el mosaico en espejo es ahora una tira doble pre-renderizada (sin transformaciones por cuadro). El fondo sigue desplazándose durante la caída y frena suave tras el impacto. Regla en coordenadas del mundo con marcas 1-2-5. API: `yOf(h)` incluye la cámara, `GROUND` = y del suelo en pantalla (puede quedar fuera), `focus(h)` nuevo (las pantallas lo llaman mientras cae el paquete), `lock` congela el zoom. Capturas de verificación con `work/camara.mjs` (fuera del repo). Chromium para QA: `sudo apt-get update && sudo apt-get install -y chromium-headless-shell`.

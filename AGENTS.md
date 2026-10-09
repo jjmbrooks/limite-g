@@ -40,7 +40,7 @@ js/data/                 datos puros, sin DOM (planetas, paquetes, …) → se v
 js/ui/                   piezas de interfaz reutilizables (anims.js, anims-aire.js y anims-impacto.js del Códice, speakers.js retratos,
                          dialogo.js máquina de escribir, grafica.js gráfica v(t) pixel, toast.js avisos de logros,
                          tarjeta.js tarjeta PNG de logros + Web Share / descarga / wa.me, compartir.js celebración de logro con «Compartir»,
-                         escena.js escena de juego de los simuladores (paralaje, nave, altura arrastrable, gameShell/wireShell),
+                         escena.js escena de juego de los simuladores (cámara vertical con zoom continuo, paralaje, nave, altura arrastrable, gameShell/wireShell),
                          video.js cinemáticas opcionales de assets/video/ (datos en js/data/videos.js))
 js/screens/              una pantalla por archivo: export default (el, arg) => cleanup?
                          (simulador = Acto 1 sin aire, aire = Acto 2, impacto = Acto 3, logros = vitrina;

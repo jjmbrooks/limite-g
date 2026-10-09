@@ -6,6 +6,15 @@ Cada entrada escrita por Hark termina con "— firmado: Hark"; las de autores hu
 
 ## [Unreleased]
 
+### Added
+- Placeholders de cinemáticas: sin MP4 se muestra su primer cuadro (assets/video/*.webp); prompts de Suno en docs/audio/prompts-suno.md. — firmado: Hark
+- Pantalla de créditos con «Victory Theme»; jingles CC0 de Kenney (victoria, logro, paquete roto); primeros y últimos cuadros de los videos. — firmado: Hark
+- Música por sección: «Galactic Quest» (tema, menú y logros) y «Starship Interior» (bitácora: historia y Códice), con fundido y respaldo chiptune. — firmado: Hark
+- Audio: créditos con Victory Theme y jingles CC0 de Kenney — firmado: Hark
+
+### Fixed
+- M11.1 escena de los simuladores: cámara vertical con zoom continuo (0.2–2000 m, sin saltos de escala) que sigue a la nave y, al soltar, al paquete hasta ver el suelo y el impacto; paralaje vertical por capas (cielo, lejanas, suelo) con cielo tramado, nubes y estrellas a gran altura; el fondo ya no se congela al soltar (frena suave tras el impacto) ni se rompen las texturas; regla en coordenadas del mundo; caché m11-2 — firmado: Hark
+
 ### Changed
 - M11 interfaz 16-bit: ventanas con marco doble y degradado tipo SNES, botones biselados con estado presionado, HUD con placas, chips, pestañas y barras con brillo, fondo con degradado de cielo y transiciones suaves (se apagan con movimiento reducido) — firmado: Hark
 - M11 simuladores (sin aire, con aire, impacto): escena a pantalla completa sin scroll en 360×640 y 390×844 (js/ui/escena.js): fondo 16-bit con paralaje por franjas que se desplaza sin fin y nave con bamboleo; la altura se cambia arrastrando sobre la escena (o con flechas: role=slider) con regla lateral de escala automática y etiqueta de altura junto a la nave; SOLTAR grande superpuesto, Ajustes en hoja deslizable y resultados superpuestos tras el impacto (gráfica v(t) y zoom del frenado); con la regla saboteada no se muestra la altura y se escribe — firmado: Hark

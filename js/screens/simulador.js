@@ -100,6 +100,7 @@ export default function simulador(el, arg) {
   // Dibujo del paquete (lo llama la escena en cada cuadro, después del fondo y la nave).
   function paint(g, S) {
     if (!cur) return;
+    if (running || landed) S.focus(cur.h); // la cámara sigue al paquete hasta el suelo
     const sh = S.ship(), x = Math.round(sh.cx - P / 2);
     const y = running || landed ? Math.round(S.yOf(cur.h)) - P : sh.y - 3;
     if (cur.h > 0 && (running || landed)) { const k = Math.max(0, 1 - cur.h / h0), sw = 4 + Math.round(k * 12); g.fillStyle = '#00000066'; g.fillRect(sh.cx - sw / 2, S.GROUND, sw, 2); }

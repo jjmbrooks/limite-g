@@ -26,9 +26,11 @@ export default function logros(el) {
       <p class="share-msg" aria-live="polite"></p>
       <img class="share-prev" alt="Vista previa de tu tarjeta de logros" hidden>
     </div>
-    <button class="btn" data-map>▶ Mapa de misiones</button>`;
+    <button class="btn" data-map>▶ Mapa de misiones</button>
+    <button class="btn ghost" data-creditos>♪ Créditos</button>`;
   el.querySelector('.slot').replaceWith(portrait('nova', 'sm'));
   el.querySelector('[data-map]').onclick = () => go('historia');
+  el.querySelector('[data-creditos]').onclick = () => go('creditos');
 
   // Tarjeta compartible (PNG pixel art): Web Share con archivo o, si no se puede, descarga + enlace de WhatsApp.
   const inp = el.querySelector('#alumno'), msg = el.querySelector('.share-msg'), prev = el.querySelector('.share-prev'), btn = el.querySelector('[data-share]');

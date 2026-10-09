@@ -1,21 +1,65 @@
 // Límite G — escrito por Hark para Jhonatan J. Martínez Brooks (MIT)
 // M11: escena de juego a pantalla completa compartida por los tres simuladores (sin aire, con aire, impacto).
-// · Fondo panorámico 16-bit con paralaje por franjas (estilo SNES) que se desplaza sin fin; la nave se bambolea.
-// · La altura se cambia ARRASTRANDO arriba/abajo sobre la escena (o con flechas del teclado: role="slider").
-// · Regla lateral con escala que se ajusta sola (0.5 m … 2000 m) y etiqueta de altura junto a la nave.
+// M11.1: cámara vertical continua. El mundo tiene el suelo en h = 0 y se ve a través de una cámara:
+// · Zoom continuo: los metros visibles crecen suavemente con la altura de la nave (sin escalas a saltos).
+// · Cerca del suelo la nave sube en pantalla; más arriba queda a ~40 % desde arriba y es el MUNDO el que baja.
+// · Paralaje vertical por capas (cielo poco, lejanas a medias, suelo al 100 %) y horizontal sin fin;
+//   arriba de la imagen se rellena con cielo tramado, nubes y, a gran altura, estrellas.
+// · Al soltar, la cámara sigue al paquete hasta ver el suelo y el impacto; al reiniciar vuelve a la nave.
+// · Regla lateral en coordenadas del mundo (marcas «bonitas» que se desplazan con la cámara).
+// · La altura se cambia ARRASTRANDO arriba/abajo sobre la escena (o con flechas: role="slider").
 // · Con la regla saboteada por Dr. Caos no se muestra ninguna altura (el alumno la escribe).
-// La pantalla dibuja lo suyo (paquete, paracaídas, partículas…) en paint(g, sc), después del fondo y la nave.
+// La pantalla dibuja lo suyo en paint(g, sc) con sc.yOf(h) (mundo → pantalla, ya con la cámara) y sc.GROUND
+// (y en pantalla del suelo, puede quedar fuera de vista). Mientras el paquete cae llama sc.focus(h).
 import { drawArt, ready, load, fondoKey } from '../gfx/imagenes.js';
 import { background } from '../gfx/scenery.js';
 import { PARABOLA } from '../gfx/sprites.js';
 import { hash } from '../gfx/pixel.js';
 
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)');
-const ESCALAS = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
 export const SHIP_W = 72, SHIP_H = 27;
-const nice = (h) => ESCALAS.find((s) => h <= s * 0.9) || ESCALAS[ESCALAS.length - 1];
+const SHIP_MAX = 0.6; // fracción máxima de la zona de vuelo (desde el suelo) que ocupa la nave: 40 % desde arriba
+// Metros visibles en la zona de vuelo: función continua de la altura (h^0.6). Hasta ~5 m el suelo queda a la vista.
+const spanOf = (h) => Math.max(1.2, 3.2 * Math.pow(Math.max(h, 0.05), 0.6));
 const stepOf = (h) => (h < 10 ? 0.1 : h < 100 ? 1 : 5);
-const fmtH = (h) => (h < 10 ? h.toFixed(1) : String(Math.round(h))).replace('.', '.') + ' m';
+const fmtH = (h) => (h < 10 ? h.toFixed(1) : String(Math.round(h))) + ' m';
+const niceStep = (raw) => { const p = 10 ** Math.floor(Math.log10(raw)), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; };
+const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// Capas de cada fondo (filas de la imagen de 320 px): cielo [0, sky), lejanas [sky, gnd), suelo [gnd, fin).
+// Cortes elegidos donde no hay objetos que atraviesen la frontera (así el paralaje no «rompe» rocas ni montañas).
+const CAPAS = {
+  'fondo-tierra': { sky: 148, gnd: 222, nube: '#f4f6ff' }, 'fondo-marte': { sky: 110, gnd: 205, nube: '#f0b48a' },
+  'fondo-luna': { sky: 152, gnd: 228 }, 'fondo-jupiter': { sky: 0, gnd: 255, nube: '#e8d2a8' },
+  'fondo-venus': { sky: 178, gnd: 234, nube: '#f2d58a' }, 'fondo-titan': { sky: 160, gnd: 238, nube: '#e0a060' },
+  'fondo-europa': { sky: 0, gnd: 178 }, 'fondo-io': { sky: 0, gnd: 250 }, 'fondo-entropia': { sky: 0, gnd: 215 },
+};
+const NIGHT = [6, 8, 26], VS = 0.25, VF = 0.6; // paralaje vertical de cielo y capas lejanas
+const hex = (c) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+const mixRGB = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+// Datos derivados de cada imagen (una vez): tira doble con la copia en espejo y colores medios de filas clave.
+const prep = new Map();
+function prepOf(key, im) {
+  if (prep.has(key)) return prep.get(key);
+  const iw = im.width, ih = im.height, c = document.createElement('canvas');
+  c.width = iw * 2; c.height = ih;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  x.drawImage(im, 0, 0); x.save(); x.translate(iw * 2, 0); x.scale(-1, 1); x.drawImage(im, 0, 0); x.restore();
+  const L = CAPAS[key] || { sky: Math.round(ih * 0.5), gnd: Math.round(ih * 0.7) };
+  const k = ih / 320, sky = Math.round(L.sky * k), gnd = Math.round(L.gnd * k);
+  let avg = () => [40, 60, 120];
+  try {
+    const d = x.getImageData(0, 0, iw, ih).data;
+    avg = (row) => { // color más frecuente de la fila (en pixel art es el «fondo» de esa fila)
+      const n = new Map(); let best = 0, col = [0, 0, 0];
+      for (let i = 0; i < iw; i++) { const o = (row * iw * 2 + i) * 4, k = (d[o] << 16) | (d[o + 1] << 8) | d[o + 2], c = (n.get(k) || 0) + 1; n.set(k, c); if (c > best) { best = c; col = [d[o], d[o + 1], d[o + 2]]; } }
+      return col;
+    };
+  } catch { /* lienzo «contaminado» (file://): colores por omisión */ }
+  const r = { c, iw, ih, sky, gnd, nube: L.nube, top: avg(0) };
+  prep.set(key, r); return r;
+}
+// Nubes (posición fija en el «cielo» con paralaje) y estrellas: deterministas.
+const CLOUDS = Array.from({ length: 14 }, (_, i) => ({ y: -30 - i * 120 - hash(i, 3, 7) * 60, x: hash(i, 4, 7) * 600, w: 26 + Math.round(hash(i, 5, 7) * 30), sp: 0.08 + 0.1 * hash(i, 6, 7) }));
 
 /**
  * host: elemento .stage (posición relativa). Opciones:
@@ -32,38 +76,42 @@ export function createScene(host, opts) {
   host.tabIndex = 0;
   host.setAttribute('role', 'slider');
   host.setAttribute('aria-label', o.label || 'Altura de la nave: arrastra arriba o abajo, o usa las flechas');
-  let W = 240, H = 380, GROUND = 320, TOP = 70, cssW = 1, cssH = 1;
-  let pl = o.planet, h = o.h0, shown = o.h0, scale = nice(o.h0), scaleShown = scale, locked = false, scroll = 0, last = performance.now(), raf = 0;
+  // GROUND0: y en pantalla del suelo cuando la cámara está abajo (borde inferior de la zona de vuelo).
+  let W = 240, H = 380, GROUND0 = 320, TOP = 70, cssW = 1, cssH = 1;
+  let pl = o.planet, h = o.h0, shown = o.h0, locked = false, scroll = 0, vel = 22, last = performance.now(), raf = 0;
   let bgKey = null, halted = false;
+  // Cámara: cam = altura del mundo (m) que cae en GROUND0; span = metros visibles entre GROUND0 y TOP.
+  let span = spanOf(o.h0), cam = 0, spanLock = span, camLock = 0, focusH = null;
 
   function resize() {
     const r = host.getBoundingClientRect(); cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
     W = Math.max(200, Math.min(300, Math.round(cssW / 1.5)));
     H = Math.round((W * cssH) / cssW);
     cv.width = W; cv.height = H; g.imageSmoothingEnabled = false;
-    GROUND = H - Math.round(Math.max(52, H * 0.15)); // por encima de la barra de botones
+    GROUND0 = H - Math.round(Math.max(52, H * 0.15)); // por encima de la barra de botones
     TOP = Math.round(Math.min(96, H * 0.22)); // por debajo de las lecturas superiores
     // Si la pantalla tiene capas encima (lecturas arriba, botones abajo), la zona de vuelo queda entre ellas.
     const top = host.querySelector('.g-top'), bot = host.querySelector('.g-bottom'), ky = H / cssH;
     if (top) TOP = Math.round((top.offsetTop + top.offsetHeight + 30) * ky);
-    if (bot) GROUND = Math.min(H - 20, Math.round((cssH - bot.offsetHeight - 22) * ky));
-    if (GROUND - TOP < 60) TOP = GROUND - 60;
+    if (bot) GROUND0 = Math.min(H - 20, Math.round((cssH - bot.offsetHeight - 22) * ky));
+    if (GROUND0 - TOP < 60) TOP = GROUND0 - 60;
   }
   const ro = new ResizeObserver(resize); ro.observe(host); host.querySelector('.g-top') && ro.observe(host.querySelector('.g-top')); resize();
 
-  const yOf = (hh, sc = scaleShown) => GROUND - (hh / sc) * (GROUND - TOP);
+  const ppm = () => (GROUND0 - TOP) / span; // píxeles por metro
+  const yOf = (hh) => GROUND0 - (hh - cam) * ppm(); // mundo → pantalla (ya incluye la cámara)
   const shipX = () => Math.round(W * 0.28);
   const bob = () => (REDUCE.matches ? 0 : Math.round(Math.sin(performance.now() / 450) * 1.5));
   // Posición de la panza de la nave (de ahí sale el paquete).
   const ship = () => ({ x: shipX(), y: Math.round(yOf(shown)), cx: shipX() + SHIP_W / 2 });
+  const camFor = (hs, sp) => Math.max(0, hs - SHIP_MAX * sp);
 
   function setPlanet(p) { pl = p; bgKey = fondoKey(p); if (bgKey) load(bgKey); }
   setPlanet(pl);
   function setHeight(v, { instant = false, silent = false } = {}) {
     h = Math.max(o.hMin, Math.min(o.hMax, Math.round(v / stepOf(v)) * stepOf(v)));
     h = +h.toFixed(2);
-    if (!locked) scale = nice(h);
-    if (instant) { shown = h; scaleShown = scale; }
+    if (instant) { shown = h; if (!locked) { span = spanOf(h); cam = camFor(h, span); } }
     host.setAttribute('aria-valuenow', String(h));
     host.setAttribute('aria-valuetext', o.hideRuler ? 'altura oculta por Dr. Caos' : fmtH(h));
     if (!silent) o.onHeight(h);
@@ -92,48 +140,115 @@ export function createScene(host, opts) {
     e.preventDefault(); setHeight(h + k * stepOf(h));
   });
 
-  // Fondo: franjas horizontales con velocidades crecientes hacia abajo (paralaje de línea, como en SNES).
+  // Cámara: sigue a la nave (o al paquete con focus) con suavizado exponencial; nunca salta.
+  function camera(dt) {
+    let tSpan, tCam;
+    if (locked) {
+      tSpan = spanLock;
+      tCam = focusH == null ? camLock : Math.max(0, Math.min(camLock, focusH - 0.45 * tSpan));
+    } else { tSpan = spanOf(shown); tCam = camFor(shown, tSpan); }
+    const k = REDUCE.matches ? 1 : 1 - Math.exp(-dt * (locked ? 9 : 6));
+    span += (tSpan - span) * k; cam += (tCam - cam) * k;
+    if (locked && focusH != null) { // el paquete nunca sale de la vista; al tocar el suelo la cámara está abajo
+      cam = Math.max(0, Math.min(cam, focusH - 0.08 * span));
+      cam = Math.max(cam, focusH - 0.9 * span);
+    }
+    if (Math.abs(tCam - cam) < 1e-4 * span) cam = tCam;
+  }
+
+  // Fondo con paralaje: horizontal (sin fin, en espejo) y vertical (cielo 25 %, lejanas 60 %, suelo 100 %).
+  const tile = (P, sy, sh, dy, off) => {
+    if (sh <= 0 || dy >= H || dy + sh <= 0) return;
+    const period = P.iw * 2; let x = -Math.round(((off % period) + period) % period);
+    for (; x < W; x += period) g.drawImage(P.c, 0, sy, period, sh, x, Math.round(dy), period, sh);
+  };
   function drawBg() {
-    const im = bgKey && ready(bgKey);
-    if (!im) { g.drawImage(background(pl, W, H, GROUND), 0, 0); return; }
-    const ih = im.height, iw = im.width, y0 = H - ih; // anclado abajo
-    if (y0 > 0) { // cielo extra arriba: degradado con tramado desde el color superior del fondo
-      g.drawImage(im, 0, 0, iw, 1, 0, 0, W, y0 + 1);
-      g.fillStyle = 'rgba(0,0,0,.35)';
-      for (let y = 0; y < y0; y += 2) { const a = 1 - y / y0; for (let x = (y / 2) % 2; x < W; x += 2) if (hash(x, y, 5) < a * 0.5) g.fillRect(x, y, 1, 1); }
-      for (let i = 0; i < 30; i++) { g.fillStyle = i % 6 ? '#ffffff' : '#ffe66d'; g.globalAlpha = 0.4 + 0.5 * hash(i, 9, 2); g.fillRect(Math.floor(hash(i, 1, 4) * W), Math.floor(hash(i, 2, 4) * y0), 1, 1); }
+    const im = bgKey && ready(bgKey), d = cam * ppm(), alt = cam + span * 0.5;
+    if (!im) { // respaldo generado, desplazado con la cámara
+      g.fillStyle = pl.sky?.[0] || '#05060f'; g.fillRect(0, 0, W, H);
+      g.drawImage(background(pl, W, H, GROUND0), 0, Math.round(d)); return;
+    }
+    const P = prepOf(bgKey, im), y0 = H - P.ih;
+    const ySky = y0 + VS * d, yFar = y0 + P.sky + VF * d, yGnd = y0 + P.gnd + d;
+    const imgTop = P.sky > 0 ? ySky : yFar - P.sky;
+    // Cielo por encima de la imagen: degradado hacia la noche (más rápido cuanto más alto), tramado y estrellas.
+    const night = smooth(120, 1800, alt), dark = 1 - Math.max(...P.top) / 255;
+    if (imgTop > 0) {
+      const L = Math.max(70, 900 * (1 - night)), gr = g.createLinearGradient(0, imgTop, 0, imgTop - L);
+      gr.addColorStop(0, hex(P.top)); gr.addColorStop(1, hex(mixRGB(P.top, NIGHT, Math.min(1, 0.55 + night))));
+      g.fillStyle = gr; g.fillRect(0, 0, W, Math.ceil(imgTop) + 1);
+      const yE = Math.min(H, Math.floor(imgTop) - 2); // tramado pixel (textura fija, sin costo por píxel)
+      if (yE > 0) { g.globalAlpha = 0.2; g.drawImage(dither(), 0, 0, W, yE, 0, 0, W, yE); g.globalAlpha = 1; }
+      const sa = Math.max(night, dark > 0.8 ? 1 : 0);
+      if (sa > 0.02) for (let i = 0; i < 46; i++) {
+        const sy = ((hash(i, 2, 4) * H * 1.6 + 0.06 * d) % (H * 1.6)) - 0.3 * H;
+        if (sy > imgTop - 6 || sy < 0) continue;
+        const sx = (((hash(i, 1, 4) * W - scroll * 0.01) % W) + W) % W;
+        g.globalAlpha = sa * (0.45 + 0.5 * hash(i, 9, 2)) * Math.min(1, (imgTop - sy) / 40);
+        g.fillStyle = i % 6 ? '#ffffff' : '#ffe66d'; g.fillRect(Math.floor(sx), Math.floor(sy), 1, 1);
+      }
       g.globalAlpha = 1;
     }
-    const hz = Math.round(ih * 0.58), bands = [[0, hz, 0.06]];
-    const N = 7; for (let k = 0; k < N; k++) { const a = hz + Math.round(((ih - hz) * k) / N), b = hz + Math.round(((ih - hz) * (k + 1)) / N); bands.push([a, b - a, 0.25 + 0.75 * ((k + 1) / N) ** 1.6]); }
-    for (const [sy, sh, sp] of bands) strip(im, sy, sh, y0 + sy, scroll * sp, iw);
-  }
-  // Un tramo del fondo repetido: los mosaicos impares se dibujan en espejo para que la unión no se note.
-  function strip(im, sy, sh, dy, off, iw) {
-    const period = iw * 2; let x = -(((off % period) + period) % period);
-    for (let k = 0; x < W; k++, x += iw) {
-      if (x + iw <= 0) continue;
-      if (k % 2 === 0) g.drawImage(im, 0, sy, iw, sh, Math.round(x), dy, iw, sh);
-      else { g.save(); g.translate(Math.round(x) + iw, 0); g.scale(-1, 1); g.drawImage(im, 0, sy, iw, sh, 0, dy, iw, sh); g.restore(); }
+    // Capas de la imagen y los huecos que abre el paralaje vertical (color medio de la fila de borde).
+    if (P.sky > 0) { // hueco entre cielo y lejanas: se repiten hacia abajo las últimas filas del cielo (horizonte)
+      tile(P, 0, P.sky, ySky, scroll * 0.05);
+      const R = Math.min(8, P.sky);
+      for (let y = ySky + P.sky; y < yFar; y += R) tile(P, P.sky - R, Math.min(R, Math.ceil(yFar - y)), y, scroll * 0.05);
     }
+    tile(P, P.sky, P.gnd - P.sky, yFar, scroll * 0.25);
+    // Hueco entre lejanas y suelo: se repiten hacia arriba las primeras filas del suelo (llanura a lo lejos).
+    const yFarEnd = yFar + P.gnd - P.sky, R = Math.min(16, P.ih - P.gnd);
+    for (let y = yGnd - R; y + R > yFarEnd; y -= R) {
+      const cut = Math.max(0, Math.ceil(yFarEnd - y));
+      tile(P, P.gnd + cut, R - cut, y + cut, scroll * 0.7);
+    }
+    tile(P, P.gnd, P.ih - P.gnd, yGnd, scroll * 0.7);
+    // Nubes en el cielo (paralaje intermedio), solo en mundos con atmósfera visible.
+    if (P.nube) {
+      for (const c of CLOUDS) {
+        const cy = Math.round(y0 + c.y + 0.4 * d); if (cy < -12 || cy > H) continue;
+        const span2 = W + 2 * c.w, cx = Math.round((((c.x - scroll * c.sp) % span2) + span2) % span2) - c.w;
+        cloud(cx, cy, c.w, P.nube);
+      }
+    }
+  }
+  let dith = null;
+  function dither() {
+    if (dith && dith.width === W && dith.height === H) return dith;
+    dith = document.createElement('canvas'); dith.width = W; dith.height = H;
+    const x = dith.getContext('2d'); x.fillStyle = '#000014';
+    for (let y = 0; y < H; y += 2) for (let i = (y >> 1) % 4; i < W; i += 4) if (hash(i, y, 5) < 0.6) x.fillRect(i, y, 1, 1);
+    return dith;
+  }
+  function cloud(x, y, w, col) {
+    g.globalAlpha = 0.9; g.fillStyle = col;
+    g.fillRect(x, y + 4, w, 5); g.fillRect(x + 3, y + 2, Math.round(w * 0.55), 3); g.fillRect(x + Math.round(w * 0.3), y, Math.round(w * 0.35), 3);
+    g.fillStyle = 'rgba(40,40,90,.25)'; g.fillRect(x + 2, y + 8, w - 4, 2);
+    g.globalAlpha = 1;
   }
   function drawRuler() {
-    if (o.hideRuler) { g.fillStyle = '#ff3fa4'; for (let y = TOP; y < GROUND; y += 8) g.fillRect(3 + ((y / 8) % 2) * 2, y, 3, 3); return; }
-    const sc = scaleShown, step = sc / 10;
-    g.fillStyle = 'rgba(10,13,34,.35)'; g.fillRect(0, TOP - 6, 12, GROUND - TOP + 8);
+    const yb = Math.min(yOf(0), H);
+    if (o.hideRuler) { g.fillStyle = '#ff3fa4'; for (let y = TOP; y < Math.min(yb, GROUND0); y += 8) g.fillRect(3 + ((y / 8) % 2) * 2, y, 3, 3); return; }
+    if (yb <= TOP) return;
+    const k = ppm(), step = niceStep(span / 5), minor = step / (step * k / 5 >= 5 ? 5 : 2);
+    g.fillStyle = 'rgba(10,13,34,.35)'; g.fillRect(0, TOP - 6, 12, yb - TOP + 6);
     g.font = '8px "Press Start 2P", monospace'; g.textBaseline = 'middle'; g.textAlign = 'left';
-    for (let k = 0; k <= 10; k++) {
-      const y = Math.round(yOf(k * step)), big = k % 5 === 0;
+    const hb = Math.max(0, cam - (yb - GROUND0) / k), ht = cam + (GROUND0 - TOP + 6) / k, dec = step < 1 ? 1 : 0;
+    for (let n = Math.ceil(hb / minor - 1e-6); n * minor <= ht; n++) {
+      const v = n * minor, y = Math.round(yOf(v)), big = Math.abs(v / step - Math.round(v / step)) < 1e-6;
+      if (y < TOP - 6 || y > yb) continue;
       g.fillStyle = '#0a0d22'; g.fillRect(2, y + 1, big ? 8 : 4, 1);
       g.fillStyle = big ? '#ffe66d' : '#e9f0ff'; g.fillRect(1, y, big ? 8 : 4, 1);
-      if (big && k) { const t = String(+(k * step).toFixed(1)); g.fillStyle = '#0a0d22'; g.fillText(t, 4, y - 6); g.fillStyle = '#ffe66d'; g.fillText(t, 3, y - 7); }
+      if (big && v > 0 && y - 7 >= TOP - 6) { const t = String(+v.toFixed(dec)); g.fillStyle = '#0a0d22'; g.fillText(t, 4, y - 6); g.fillStyle = '#ffe66d'; g.fillText(t, 3, y - 7); }
     }
     // línea punteada hasta la nave
-    const y = Math.round(yOf(shown)); g.fillStyle = 'rgba(255,230,109,.7)';
+    const y = Math.round(yOf(shown)); if (y < 0 || y > H) return;
+    g.fillStyle = 'rgba(255,230,109,.7)';
     for (let x = 10; x < shipX(); x += 4) g.fillRect(x, y, 2, 1);
   }
   function drawShip() {
     const s = ship(), y = s.y - SHIP_H + bob() + 2;
+    if (y > H || y + SHIP_H < 0) return;
     if (!REDUCE.matches) { // estela del motor
       g.fillStyle = (Math.floor(performance.now() / 90) % 2) ? '#ffe66d' : '#ff8a1f';
       g.fillRect(s.x - 4, y + Math.round(SHIP_H * 0.42), 4, 2);
@@ -142,16 +257,20 @@ export function createScene(host, opts) {
   }
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (!REDUCE.matches && !halted) scroll += dt * 22;
+    // El fondo sigue desplazándose mientras cae el paquete; tras el impacto frena suave (el paquete ya no viaja).
+    vel += ((halted ? 0 : 22) - vel) * (1 - Math.exp(-dt * 3));
+    if (!REDUCE.matches) scroll += dt * vel;
     const k = REDUCE.matches ? 1 : 1 - Math.exp(-dt * 10);
-    shown += (h - shown) * k; scaleShown += (scale - scaleShown) * k;
+    shown += (h - shown) * k;
     if (Math.abs(h - shown) < 1e-3) shown = h;
+    camera(dt);
     drawBg(); drawRuler(); drawShip();
     o.paint(g, api);
-    // etiqueta de altura junto a la nave (en px CSS)
-    const s = ship(), kx = cssW / W, ky = cssH / H;
+    // etiqueta de altura junto a la nave (en px CSS); se oculta si la nave sale de la vista
+    const s = ship(), kx = cssW / W, ky = cssH / H, vis = s.y > TOP - 20 && s.y < H;
     tag.textContent = o.hideRuler ? '¿? m' : fmtH(locked ? h : shown);
     tag.classList.toggle('caos', o.hideRuler);
+    tag.style.visibility = vis ? '' : 'hidden';
     tag.style.transform = `translate(${Math.round((s.x + SHIP_W + 2) * kx)}px, ${Math.round((s.y - SHIP_H / 2) * ky - 14)}px)`;
     raf = requestAnimationFrame(frame);
   }
@@ -159,11 +278,17 @@ export function createScene(host, opts) {
   if (!canDrag()) hint.classList.add('gone');
 
   const api = {
-    get W() { return W; }, get H() { return H; }, get GROUND() { return GROUND; }, get TOP() { return TOP; },
-    get h() { return h; }, ship, yOf, setHeight, setPlanet,
-    // Durante la caída se congela la escala para que el paquete caiga con la regla quieta.
-    lock(v) { locked = v; if (v) { shown = h; scaleShown = scale; } else scale = nice(h); hint.classList.add('gone'); },
-    halt(v) { halted = v; }, // tras el impacto la cámara se detiene
+    get W() { return W; }, get H() { return H; }, get TOP() { return TOP; },
+    get GROUND() { return yOf(0); }, // y en pantalla del suelo (h = 0); puede quedar fuera de vista
+    get h() { return h; }, get span() { return span; }, ship, yOf, setHeight, setPlanet,
+    // Durante la caída se congela el zoom; la cámara sigue al paquete (focus) hasta ver el suelo.
+    lock(v) {
+      locked = v; focusH = null;
+      if (v) { shown = h; spanLock = span; camLock = cam; }
+      hint.classList.add('gone');
+    },
+    focus(v) { focusH = v == null ? null : Math.max(0, v); }, // altura (m) del paquete que la cámara debe seguir
+    halt(v) { halted = v; }, // tras el impacto el fondo frena suavemente
     setFixed(v) { o.fixed = v; }, setHideRuler(v) { o.hideRuler = v; },
     destroy() { cancelAnimationFrame(raf); ro.disconnect(); },
   };

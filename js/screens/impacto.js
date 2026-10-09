@@ -118,6 +118,7 @@ export default function impacto(el, arg) {
     g.fillStyle = sl.color; g.fillRect(sh.cx - 33, S.GROUND, 66, 4); // plataforma de aterrizaje
     g.fillStyle = '#ffffff44'; g.fillRect(sh.cx - 33, S.GROUND, 66, 1);
     const moving = running || fallH < h0;
+    if (moving) S.focus(fallH); // la cámara sigue al paquete hasta el suelo
     const y = moving ? Math.round(S.yOf(fallH)) - P : sh.y - 3, th = funda.rho ? Math.min(4, 1 + Math.round(t * 30)) : 0;
     if (th) { g.fillStyle = '#0a0d22'; g.fillRect(x - th - 1, y - th - 1, P + 2 * th + 2, P + 2 * th + 2); g.fillStyle = funda.color; g.fillRect(x - th, y - th, P + 2 * th, P + 2 * th); }
     drawArt(g, 'obj-' + obj.id, OBJ_SPRITES[obj.id], x, y, P, P);

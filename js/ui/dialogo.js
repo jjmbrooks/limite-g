@@ -2,7 +2,7 @@
 // Diálogos con efecto máquina de escribir. Tocar: completa la línea o pasa a la siguiente. «Omitir» salta la escena.
 // Con movimiento reducido el texto aparece completo de inmediato.
 import { SPEAKERS, portrait } from './speakers.js';
-import { sfx } from '../audio.js';
+import { sfx, musicScene } from '../audio.js';
 
 const SPEED = 24; // ms por letra
 
@@ -30,7 +30,7 @@ export function playScene(host, lines, onEnd = () => {}) {
     $('.scene-who').firstElementChild.replaceWith(portrait(L.who));
     $('#sc-name').textContent = S.name; $('#sc-name').style.color = S.color;
     $('.scene').dataset.who = L.who;
-    if (L.who === 'caos') sfx.glitch();
+    if (L.who === 'caos') { sfx.glitch(); musicScene('caos'); } // su tema suena desde que aparece hasta el fin de la escena
     if (reduce) { text.textContent = L.text; return; }
     let n = 0; text.textContent = '';
     typing = setInterval(() => {
@@ -46,12 +46,12 @@ export function playScene(host, lines, onEnd = () => {}) {
   }
   function end() {
     if (done) return; done = true; clearInterval(typing);
-    host.innerHTML = ''; onEnd();
+    musicScene(null); host.innerHTML = ''; onEnd();
   }
   $('.scene').addEventListener('click', (e) => { if (!e.target.closest('[data-skip]')) advance(); });
   $('[data-skip]').onclick = () => { sfx.click(); end(); };
   host.addEventListener('keydown', (e) => { if (e.key === 'Escape') end(); });
   line();
   $('[data-next]').focus({ preventScroll: true });
-  return () => { done = true; clearInterval(typing); };
+  return () => { done = true; clearInterval(typing); musicScene(null); };
 }

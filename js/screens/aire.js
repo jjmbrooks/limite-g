@@ -135,6 +135,7 @@ export default function aire(el, arg) {
   function drawStage(g, S) {
     if (!fall) return;
     const s = fall.s, sh = S.ship(), P = 16, x = Math.round(sh.cx - P / 2), moving = running || s.t > 0;
+    if (moving) S.focus(s.h); // la cámara sigue al paquete hasta el suelo
     if (openAt > 0 && chute.A && !sab.has('tormenta')) { g.fillStyle = '#ff3fa4'; const y = Math.round(S.yOf(openAt)); for (let xx = 12; xx < S.W - 2; xx += 6) g.fillRect(xx, y, 3, 1); }
     const y = moving ? Math.round(S.yOf(s.h)) - P : sh.y - 3;
     if (s.v > 2 && s.h > 0) { g.fillStyle = '#ffffff55'; for (let k = 1; k < Math.min(5, 1 + s.v / 8); k++) g.fillRect(sh.cx - 1, y - k * 6, 2, 3); }
@@ -148,9 +149,9 @@ export default function aire(el, arg) {
   function storm(g, S) { // lluvia diagonal y relámpagos (sin destellos con movimiento reducido)
     const t = REDUCE.matches ? 0 : performance.now() / 60;
     g.fillStyle = '#9fc8ff66';
-    for (let i = 0; i < 70; i++) { const x = (i * 29 + t * 2) % S.W, y = (i * 47 + t * 5) % S.GROUND; g.fillRect(Math.round(x), Math.round(y), 1, 4); }
+    for (let i = 0; i < 70; i++) { const x = (i * 29 + t * 2) % S.W, y = (i * 47 + t * 5) % Math.max(1, Math.min(S.H, S.GROUND)); g.fillRect(Math.round(x), Math.round(y), 1, 4); }
     if (!REDUCE.matches && running && Math.random() < 0.01) flash = 3;
-    if (flash > 0) { flash--; g.fillStyle = '#ffffff55'; g.fillRect(0, 0, S.W, S.GROUND); }
+    if (flash > 0) { flash--; g.fillStyle = '#ffffff55'; g.fillRect(0, 0, S.W, Math.min(S.H, S.GROUND)); }
   }
 
   function drop() {

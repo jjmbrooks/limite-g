@@ -1,5 +1,5 @@
 import { get, set } from './state.js';
-import { musicStart, toggleSound } from './audio.js';
+import { musicStart, musicFor, toggleSound } from './audio.js';
 import { go } from './nav.js';
 import { mountStarfield } from './gfx/starfield.js';
 import menu from './screens/menu.js';
@@ -10,18 +10,20 @@ import historia from './screens/historia.js';
 import aire from './screens/aire.js';
 import impacto from './screens/impacto.js';
 import logros from './screens/logros.js';
+import creditos from './screens/creditos.js';
 import { newLogros, LOGROS } from './data/logros.js';
 import { toast } from './ui/toast.js';
 import { celebrarLogro } from './ui/compartir.js';
 import { sfx } from './audio.js';
 
-const ROUTES = { menu, historia, simulador, aire, impacto, codice, examen, logros };
+const ROUTES = { menu, historia, simulador, aire, impacto, codice, examen, logros, creditos };
 const app = document.getElementById('app');
 let cleanup = null;
 
 // Rutas: #pantalla o #pantalla/argumento (p. ej. #simulador/m1 abre una misión).
 function render() {
   const [name, arg] = (location.hash.slice(1) || 'menu').split('/');
+  musicFor(ROUTES[name] ? name : 'menu', arg);
   if (cleanup) cleanup();
   app.innerHTML = '';
   const view = document.createElement('section'); view.className = 'fade-in'; app.appendChild(view);
@@ -44,7 +46,7 @@ document.addEventListener('state', () => {
   const nuevos = newLogros(get());
   if (!nuevos.length) return;
   set({ logros: [...(get().logros || []), ...nuevos] });
-  sfx.win();
+  sfx.logro();
   // Con más de dos a la vez (p. ej. una partida guardada antes de M9) se agrupan en un solo aviso para no tapar la pantalla.
   // M11: cada celebración ofrece «Compartir» (tarjeta PNG con Web Share o WhatsApp).
   if (nuevos.length > 2) { celebrarLogro(`<b>¡${nuevos.length} logros desbloqueados!</b> Míralos en ★ Logros.`); return; }

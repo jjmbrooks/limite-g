@@ -3,12 +3,24 @@
 // (funciona en / y bajo /limite-g/ de GitHub Pages) y responde primero desde la caché.
 // AL PUBLICAR CAMBIOS: sube VERSION (p. ej. 'm10-2') para que los teléfonos descarguen la versión nueva.
 // La lista PRECACHE la verifica scripts/qa.sh; `node scripts/qa/sw-precache.mjs --fix` la regenera.
-const VERSION = 'm11-1';
+const VERSION = 'm11-5';
 const CACHE = 'limiteg-' + VERSION;
 
 // <precache>
 const PRECACHE = [
   './',
+  'assets/audio/acto1.m4a',
+  'assets/audio/acto2.m4a',
+  'assets/audio/acto3.m4a',
+  'assets/audio/bitacora.m4a',
+  'assets/audio/caos.m4a',
+  'assets/audio/creditos.m4a',
+  'assets/audio/examen.m4a',
+  'assets/audio/final.m4a',
+  'assets/audio/sfx/logro.m4a',
+  'assets/audio/sfx/rompe.m4a',
+  'assets/audio/sfx/victoria.m4a',
+  'assets/audio/tema.m4a',
   'assets/fondos/entropia.png',
   'assets/fondos/europa.png',
   'assets/fondos/io.png',
@@ -34,6 +46,9 @@ const PRECACHE = [
   'assets/sprites/retrato-caos.png',
   'assets/sprites/retrato-gal.png',
   'assets/sprites/retrato-nova.png',
+  'assets/video/entrega.webp',
+  'assets/video/final.webp',
+  'assets/video/intro.webp',
   'css/style.css',
   'js/audio.js',
   'js/data/actos.js',
@@ -64,6 +79,7 @@ const PRECACHE = [
   'js/progress.js',
   'js/screens/aire.js',
   'js/screens/codice.js',
+  'js/screens/creditos.js',
   'js/screens/examen.js',
   'js/screens/historia.js',
   'js/screens/impacto.js',

@@ -301,3 +301,16 @@ h2{color:var(--teal);text-shadow:2px 2px 0 var(--ink-d)}
 .video-ov{position:fixed;inset:0;z-index:50;background:#000;display:grid;place-items:center}
 .video-ov video{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
 .video-skip{position:absolute;right:12px;bottom:max(16px,env(safe-area-inset-bottom));width:auto}
+
+/* Créditos (#creditos): desfile vertical estilo SNES. */
+.creditos { position: relative; height: min(70vh, 560px); overflow: hidden; border: 3px double var(--teal, #2ec4b6); border-radius: 6px; background: linear-gradient(#0a0d22, #1b1450); margin-bottom: 14px; }
+.cred-roll { position: absolute; inset: 0 12px auto; text-align: center; animation: cred-sube 38s linear infinite; padding-top: 100%; }
+.cred-roll section { margin: 0 0 34px; }
+.cred-roll h2 { font-size: 11px; color: var(--yellow, #ffe66d); margin: 0 0 8px; }
+.cred-roll p { margin: 0; line-height: 1.5; }
+.cred-caras { display: flex; justify-content: center; gap: 12px; padding-bottom: 40px; }
+@keyframes cred-sube { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@media (prefers-reduced-motion: reduce) { .creditos { height: auto; overflow: visible; } .cred-roll { position: static; animation: none; padding: 16px 0; } }
+.video-poster{width:100%;height:100%;object-fit:contain}
+.video-poster.kb{animation:kb-zoom 4s ease-out both}
+@keyframes kb-zoom{from{transform:scale(1)}to{transform:scale(1.08)}}
